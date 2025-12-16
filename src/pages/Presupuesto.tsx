@@ -1,0 +1,278 @@
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  mockProjects,
+  calculateProjectTotal,
+  calculateProjectTotalBySection,
+  formatCurrency,
+  getSectionById,
+  getTemplateById,
+} from "@/data/mockData";
+import { Calculator, FileText, Share2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+
+export default function Presupuesto() {
+  const [searchParams] = useSearchParams();
+  const projectIdFromUrl = searchParams.get("proyecto");
+  
+  const [selectedProjectId, setSelectedProjectId] = useState(
+    projectIdFromUrl || mockProjects[0]?.id || ""
+  );
+  const [includeIVA, setIncludeIVA] = useState(true);
+  const [margin, setMargin] = useState("15");
+
+  const project = mockProjects.find((p) => p.id === selectedProjectId);
+  const subtotal = project ? calculateProjectTotal(project) : 0;
+  const marginAmount = subtotal * (parseFloat(margin) || 0) / 100;
+  const subtotalWithMargin = subtotal + marginAmount;
+  const ivaAmount = includeIVA ? subtotalWithMargin * 0.21 : 0;
+  const total = subtotalWithMargin + ivaAmount;
+
+  const totalsBySection = project ? calculateProjectTotalBySection(project) : {};
+
+  const handleShare = () => {
+    toast({
+      title: "Compartir presupuesto",
+      description: "Función de compartir (demo)",
+    });
+  };
+
+  const handleExport = () => {
+    toast({
+      title: "Exportar PDF",
+      description: "Generando documento (demo)",
+    });
+  };
+
+  return (
+    <AppLayout title="Presupuesto">
+      <div className="space-y-6 max-w-2xl mx-auto">
+        {/* Selector de proyecto */}
+        <Card>
+          <CardContent className="p-4">
+            <Label className="text-body font-medium mb-2 block">Proyecto</Label>
+            <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+              <SelectTrigger className="h-14 text-body-lg">
+                <SelectValue placeholder="Selecciona proyecto" />
+              </SelectTrigger>
+              <SelectContent>
+                {mockProjects.map((p) => (
+                  <SelectItem key={p.id} value={p.id} className="h-12 text-body">
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        {project && (
+          <>
+            {/* Desglose por sección */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calculator className="h-5 w-5 text-primary" />
+                  Desglose por sección
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {Object.entries(totalsBySection).map(([sectionId, sectionTotal]) => {
+                  const section = getSectionById(sectionId);
+                  if (!section) return null;
+
+                  return (
+                    <div
+                      key={sectionId}
+                      className="flex items-center justify-between py-3 border-b last:border-0"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{section.icon}</span>
+                        <span className="text-body font-medium">{section.name}</span>
+                      </div>
+                      <span className="text-body-lg font-semibold">
+                        {formatCurrency(sectionTotal)}
+                      </span>
+                    </div>
+                  );
+                })}
+
+                <div className="flex items-center justify-between pt-3 border-t-2">
+                  <span className="text-body-lg font-semibold">Subtotal</span>
+                  <span className="text-heading font-bold">
+                    {formatCurrency(subtotal)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Partidas del proyecto */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Detalle de partidas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {project.items.map((item) => {
+                  const template = getTemplateById(item.templateId);
+                  if (!template) return null;
+                  const section = getSectionById(template.sectionId);
+
+                  let itemTotal = 0;
+                  if (item.includeInstallation) {
+                    itemTotal += template.priceInstallation * item.quantity;
+                  }
+                  if (item.includeSupply && template.priceSupply) {
+                    itemTotal += template.priceSupply * item.quantity;
+                  }
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-lg bg-muted/50 space-y-2"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-small text-muted-foreground">
+                            {section?.icon} {section?.name}
+                          </p>
+                          <p className="text-body font-semibold">
+                            {template.name}
+                          </p>
+                        </div>
+                        <span className="text-body-lg font-bold shrink-0">
+                          {formatCurrency(itemTotal)}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-small text-muted-foreground">
+                        <span>
+                          {item.quantity.toLocaleString("es-ES")} {template.unit}
+                        </span>
+                        {item.includeInstallation && <span>• Instalación</span>}
+                        {item.includeSupply && <span>• Suministro</span>}
+                      </div>
+
+                      {item.notes && (
+                        <p className="text-small text-muted-foreground italic">
+                          "{item.notes}"
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+
+            {/* Ajustes */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Ajustes del presupuesto</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/50">
+                  <Label htmlFor="iva" className="text-body font-medium cursor-pointer">
+                    Incluir IVA (21%)
+                  </Label>
+                  <Switch
+                    id="iva"
+                    checked={includeIVA}
+                    onCheckedChange={setIncludeIVA}
+                  />
+                </div>
+
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <Label htmlFor="margin" className="text-body font-medium mb-2 block">
+                    Margen de beneficio (%)
+                  </Label>
+                  <Input
+                    id="margin"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    value={margin}
+                    onChange={(e) => setMargin(e.target.value)}
+                    className="text-center text-heading font-bold"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Totales */}
+            <Card className="bg-secondary text-secondary-foreground">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex justify-between text-body">
+                  <span>Subtotal partidas</span>
+                  <span>{formatCurrency(subtotal)}</span>
+                </div>
+
+                {parseFloat(margin) > 0 && (
+                  <div className="flex justify-between text-body">
+                    <span>Margen ({margin}%)</span>
+                    <span>+ {formatCurrency(marginAmount)}</span>
+                  </div>
+                )}
+
+                {includeIVA && (
+                  <div className="flex justify-between text-body">
+                    <span>IVA (21%)</span>
+                    <span>+ {formatCurrency(ivaAmount)}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pt-4 border-t border-secondary-foreground/20">
+                  <span className="text-subheading font-semibold">TOTAL</span>
+                  <span className="text-display">{formatCurrency(total)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Texto legal */}
+            <p className="text-small text-muted-foreground text-center italic px-4">
+              Presupuesto orientativo sujeto a mediciones finales. Validez 30 días.
+            </p>
+
+            {/* Acciones */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="lg"
+                className="flex-1"
+                onClick={handleShare}
+              >
+                <Share2 className="h-5 w-5" />
+                Compartir
+              </Button>
+              <Button
+                variant="action"
+                size="lg"
+                className="flex-1"
+                onClick={handleExport}
+              >
+                <FileText className="h-5 w-5" />
+                Exportar PDF
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </AppLayout>
+  );
+}
