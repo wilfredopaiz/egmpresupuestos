@@ -35,8 +35,8 @@ export function AppLayout({ children, title }: AppLayoutProps) {
           </header>
 
           {/* Main content */}
-          <main className="flex-1 overflow-auto">
-            <div className="container py-6 pb-24 md:pb-6">
+          <main className="flex-1 overflow-x-hidden overflow-y-auto">
+            <div className="px-4 py-6 pb-24 md:pb-6 max-w-full">
               {title && (
                 <h1 className="md:hidden text-heading font-semibold text-foreground mb-6">
                   {title}
