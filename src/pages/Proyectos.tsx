@@ -8,13 +8,13 @@ import { Link } from "react-router-dom";
 export default function Proyectos() {
   return (
     <AppLayout title="Proyectos">
-      <div className="space-y-6">
+      <div className="space-y-6 w-full overflow-hidden">
         {/* Header con botón */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <p className="text-body text-muted-foreground">
             {mockProjects.length} proyecto{mockProjects.length !== 1 ? "s" : ""} activo{mockProjects.length !== 1 ? "s" : ""}
           </p>
-          <Button variant="action" asChild>
+          <Button variant="action" asChild className="w-full sm:w-auto">
             <Link to="/nueva-obra">
               <PlusCircle className="h-5 w-5" />
               Nueva obra

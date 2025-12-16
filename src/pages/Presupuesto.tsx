@@ -59,7 +59,7 @@ export default function Presupuesto() {
 
   return (
     <AppLayout title="Presupuesto">
-      <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="space-y-6 w-full max-w-2xl mx-auto overflow-hidden">
         {/* Selector de proyecto */}
         <Card>
           <CardContent className="p-4">
@@ -250,7 +250,7 @@ export default function Presupuesto() {
             </p>
 
             {/* Acciones */}
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="outline"
                 size="lg"
