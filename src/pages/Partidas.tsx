@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ItemTemplateCard } from "@/components/partidas/ItemTemplateCard";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { sections, getTemplatesBySection } from "@/data/mockData";
-import { ChevronDown, ChevronRight, Plus, FolderPlus } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { FolderPlus, ChevronRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -15,34 +14,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useState } from "react";
 
 export default function Partidas() {
-  const [openSections, setOpenSections] = useState<string[]>([]);
+  const navigate = useNavigate();
   const [addSectionOpen, setAddSectionOpen] = useState(false);
-  const [addItemOpen, setAddItemOpen] = useState(false);
-  const [selectedSectionId, setSelectedSectionId] = useState<string>("");
-
-  const toggleSection = (sectionId: string) => {
-    setOpenSections(prev => 
-      prev.includes(sectionId) 
-        ? prev.filter(id => id !== sectionId)
-        : [...prev, sectionId]
-    );
-  };
-
-  const handleEdit = (templateName: string) => {
-    toast({
-      title: "Editar partida",
-      description: `Editando "${templateName}" (demo)`,
-    });
-  };
 
   const handleAddSection = () => {
     toast({
@@ -52,34 +28,20 @@ export default function Partidas() {
     setAddSectionOpen(false);
   };
 
-  const handleAddItem = () => {
-    toast({
-      title: "Partida creada",
-      description: "Nueva partida añadida (demo)",
-    });
-    setAddItemOpen(false);
-    setSelectedSectionId("");
-  };
-
-  const openAddItemModal = (sectionId: string) => {
-    setSelectedSectionId(sectionId);
-    setAddItemOpen(true);
-  };
-
   return (
     <AppLayout title="Partidas">
-      <div className="space-y-4 w-full overflow-hidden">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="text-body text-muted-foreground">
-            Catálogo de partidas estándar organizadas por sección
+      <div className="space-y-4 w-full">
+        {/* Header con botón */}
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground text-sm">
+            Selecciona una sección
           </p>
           
-          {/* Botón Agregar Sección */}
           <Dialog open={addSectionOpen} onOpenChange={setAddSectionOpen}>
             <DialogTrigger asChild>
-              <Button variant="action" className="w-full sm:w-auto">
-                <FolderPlus className="h-5 w-5" />
-                Agregar Sección
+              <Button variant="outline" size="sm">
+                <FolderPlus className="h-4 w-4" />
+                Nueva
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
@@ -88,7 +50,7 @@ export default function Partidas() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="section-name">Nombre de la sección</Label>
+                  <Label htmlFor="section-name">Nombre</Label>
                   <Input id="section-name" placeholder="Ej: Carpintería" className="h-12" />
                 </div>
                 <div className="space-y-2">
@@ -103,107 +65,33 @@ export default function Partidas() {
           </Dialog>
         </div>
 
-        {sections.map((section) => {
-          const templates = getTemplatesBySection(section.id);
-          const isOpen = openSections.includes(section.id);
-
-          return (
-            <Collapsible
-              key={section.id}
-              open={isOpen}
-              onOpenChange={() => toggleSection(section.id)}
-            >
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full h-14 justify-between px-4 bg-secondary hover:bg-secondary/80 rounded-xl border-2 border-border"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{section.icon}</span>
-                    <span className="text-body-lg font-semibold">{section.name}</span>
-                    <span className="text-small text-muted-foreground">
-                      ({templates.length})
-                    </span>
+        {/* Grid de secciones */}
+        <div className="grid gap-3">
+          {sections.map((section) => {
+            const templates = getTemplatesBySection(section.id);
+            
+            return (
+              <Card
+                key={section.id}
+                className="p-0 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+                onClick={() => navigate(`/partidas/${section.id}`)}
+              >
+                <div className="flex items-center justify-between p-5 bg-card hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <span className="text-3xl">{section.icon}</span>
+                    <div>
+                      <h3 className="font-semibold text-lg">{section.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {templates.length} {templates.length === 1 ? 'partida' : 'partidas'}
+                      </p>
+                    </div>
                   </div>
-                  {isOpen ? (
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
-                  ) : (
-                    <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-
-              <CollapsibleContent className="overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 duration-200">
-                <div className="pt-3 pl-4 space-y-3 border-l-2 border-primary/30 ml-4">
-                  {templates.map((template) => (
-                    <ItemTemplateCard
-                      key={template.id}
-                      template={template}
-                      onEdit={() => handleEdit(template.name)}
-                    />
-                  ))}
-                  
-                  {/* Botón agregar partida dentro de sección */}
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-12 border-dashed border-2"
-                    onClick={() => openAddItemModal(section.id)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar partida a {section.name}
-                  </Button>
+                  <ChevronRight className="h-6 w-6 text-muted-foreground" />
                 </div>
-              </CollapsibleContent>
-            </Collapsible>
-          );
-        })}
-
-        {/* Modal Agregar Partida */}
-        <Dialog open={addItemOpen} onOpenChange={setAddItemOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Nueva Partida</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Sección</Label>
-                <Select value={selectedSectionId} onValueChange={setSelectedSectionId}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Seleccionar sección" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sections.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.icon} {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="item-name">Nombre de la partida</Label>
-                <Input id="item-name" placeholder="Ej: Instalación enchufe" className="h-12" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="item-unit">Unidad</Label>
-                <Input id="item-unit" placeholder="Ej: ud, m², ml" className="h-12" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="item-price-install">Precio instalación (€)</Label>
-                  <Input id="item-price-install" type="number" placeholder="0" className="h-12" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="item-price-supply">Precio suministro (€)</Label>
-                  <Input id="item-price-supply" type="number" placeholder="0" className="h-12" />
-                </div>
-              </div>
-              <Button variant="action" className="w-full" onClick={handleAddItem}>
-                Crear Partida
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     </AppLayout>
   );
