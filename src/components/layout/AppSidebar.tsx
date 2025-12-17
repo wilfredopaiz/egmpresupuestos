@@ -4,7 +4,6 @@ import {
   FolderKanban,
   PlusCircle,
   LayoutList,
-  Calculator,
   Settings,
   HardHat,
 } from "lucide-react";
@@ -24,7 +23,6 @@ const navItems = [
   { title: "Proyectos", url: "/", icon: FolderKanban },
   { title: "Nueva obra", url: "/nueva-obra", icon: PlusCircle },
   { title: "Partidas", url: "/partidas", icon: LayoutList },
-  { title: "Presupuesto", url: "/presupuesto", icon: Calculator },
   { title: "Ajustes", url: "/ajustes", icon: Settings },
 ];
 

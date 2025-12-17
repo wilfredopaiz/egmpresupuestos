@@ -1,13 +1,25 @@
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Building2, User, FileText, Info } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Building2, FileText, Info, Ruler, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { measureUnits } from "@/data/mockData";
 
 export default function Ajustes() {
+  const [addUnitOpen, setAddUnitOpen] = useState(false);
+  const [editUnitOpen, setEditUnitOpen] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<typeof measureUnits[0] | null>(null);
+
   const handleSave = () => {
     toast({
       title: "Ajustes guardados",
@@ -15,9 +27,38 @@ export default function Ajustes() {
     });
   };
 
+  const handleAddUnit = () => {
+    toast({
+      title: "Medida creada",
+      description: "Nueva unidad de medida añadida (demo)",
+    });
+    setAddUnitOpen(false);
+  };
+
+  const handleEditUnit = () => {
+    toast({
+      title: "Medida actualizada",
+      description: `"${selectedUnit?.label}" se ha actualizado (demo)`,
+    });
+    setEditUnitOpen(false);
+    setSelectedUnit(null);
+  };
+
+  const handleDeleteUnit = (unit: typeof measureUnits[0]) => {
+    toast({
+      title: "Medida eliminada",
+      description: `"${unit.label}" se ha eliminado (demo)`,
+    });
+  };
+
+  const openEditUnit = (unit: typeof measureUnits[0]) => {
+    setSelectedUnit(unit);
+    setEditUnitOpen(true);
+  };
+
   return (
     <AppLayout title="Ajustes">
-      <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="space-y-6 w-full max-w-2xl mx-auto">
         {/* Datos de empresa */}
         <Card>
           <CardHeader>
@@ -136,6 +177,52 @@ export default function Ajustes() {
           </CardContent>
         </Card>
 
+        {/* Medidas */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Ruler className="h-5 w-5 text-primary" />
+                Medidas
+              </CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setAddUnitOpen(true)}>
+                <Plus className="h-4 w-4" />
+                Nueva
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {measureUnits.map((unit) => (
+              <div 
+                key={unit.id} 
+                className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+              >
+                <div>
+                  <span className="font-medium">{unit.label}</span>
+                  <span className="text-sm text-muted-foreground ml-2">({unit.id})</span>
+                </div>
+                <div className="flex gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon-sm"
+                    onClick={() => openEditUnit(unit)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon-sm"
+                    onClick={() => handleDeleteUnit(unit)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
         {/* Info app */}
         <Card>
           <CardHeader>
@@ -172,6 +259,66 @@ export default function Ajustes() {
           Guardar cambios
         </Button>
       </div>
+
+      {/* Modal de nueva medida */}
+      <Dialog open={addUnitOpen} onOpenChange={setAddUnitOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nueva Medida</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="unit-id">Código</Label>
+              <Input 
+                id="unit-id" 
+                placeholder="Ej: m2"
+                className="h-12" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unit-label">Nombre</Label>
+              <Input 
+                id="unit-label" 
+                placeholder="Ej: Metros cuadrados (m²)"
+                className="h-12" 
+              />
+            </div>
+            <Button variant="action" className="w-full" onClick={handleAddUnit}>
+              Crear Medida
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de editar medida */}
+      <Dialog open={editUnitOpen} onOpenChange={setEditUnitOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Medida</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-unit-id">Código</Label>
+              <Input 
+                id="edit-unit-id" 
+                defaultValue={selectedUnit?.id}
+                className="h-12" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-unit-label">Nombre</Label>
+              <Input 
+                id="edit-unit-label" 
+                defaultValue={selectedUnit?.label}
+                className="h-12" 
+              />
+            </div>
+            <Button variant="action" className="w-full" onClick={handleEditUnit}>
+              Guardar cambios
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

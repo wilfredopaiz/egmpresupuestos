@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getSectionById, getTemplatesBySection, formatCurrency, sections } from "@/data/mockData";
+import { getSectionById, getTemplatesBySection, formatCurrency, measureUnits, ItemTemplate } from "@/data/mockData";
 import { ArrowLeft, Plus, Wrench, Package } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -12,6 +12,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
@@ -20,6 +27,17 @@ export default function SeccionDetalle() {
   const { sectionId } = useParams<{ sectionId: string }>();
   const navigate = useNavigate();
   const [addItemOpen, setAddItemOpen] = useState(false);
+  const [editItemOpen, setEditItemOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ItemTemplate | null>(null);
+  
+  // Form states for new item
+  const [newItemUnit, setNewItemUnit] = useState("ud");
+  
+  // Form states for edit item
+  const [editItemName, setEditItemName] = useState("");
+  const [editItemUnit, setEditItemUnit] = useState("");
+  const [editItemPriceInstall, setEditItemPriceInstall] = useState("");
+  const [editItemPriceSupply, setEditItemPriceSupply] = useState("");
   
   const section = getSectionById(sectionId || "");
   const templates = getTemplatesBySection(sectionId || "");
@@ -30,13 +48,25 @@ export default function SeccionDetalle() {
       description: "Nueva partida añadida (demo)",
     });
     setAddItemOpen(false);
+    setNewItemUnit("ud");
   };
 
-  const handleEditItem = (name: string) => {
+  const handleEditItem = () => {
     toast({
-      title: "Editar partida",
-      description: `Editando "${name}" (demo)`,
+      title: "Partida actualizada",
+      description: `"${selectedItem?.name}" se ha actualizado (demo)`,
     });
+    setEditItemOpen(false);
+    setSelectedItem(null);
+  };
+
+  const openEditModal = (template: ItemTemplate) => {
+    setSelectedItem(template);
+    setEditItemName(template.name);
+    setEditItemUnit(template.unit);
+    setEditItemPriceInstall(template.priceInstallation.toString());
+    setEditItemPriceSupply(template.priceSupply?.toString() || "");
+    setEditItemOpen(true);
   };
 
   if (!section) {
@@ -84,8 +114,19 @@ export default function SeccionDetalle() {
                   <Input id="item-name" placeholder="Ej: Instalación enchufe" className="h-12" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="item-unit">Unidad</Label>
-                  <Input id="item-unit" placeholder="Ej: ud, m², ml" className="h-12" />
+                  <Label>Unidad</Label>
+                  <Select value={newItemUnit} onValueChange={setNewItemUnit}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background">
+                      {measureUnits.map((unit) => (
+                        <SelectItem key={unit.id} value={unit.id}>
+                          {unit.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
@@ -122,7 +163,7 @@ export default function SeccionDetalle() {
             <Card
               key={template.id}
               className="p-4 cursor-pointer active:scale-[0.98] transition-transform"
-              onClick={() => handleEditItem(template.name)}
+              onClick={() => openEditModal(template)}
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
@@ -165,6 +206,66 @@ export default function SeccionDetalle() {
           </div>
         )}
       </div>
+
+      {/* Modal de editar partida */}
+      <Dialog open={editItemOpen} onOpenChange={setEditItemOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Partida</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-item-name">Nombre</Label>
+              <Input 
+                id="edit-item-name" 
+                value={editItemName}
+                onChange={(e) => setEditItemName(e.target.value)}
+                className="h-12" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Unidad</Label>
+              <Select value={editItemUnit} onValueChange={setEditItemUnit}>
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  {measureUnits.map((unit) => (
+                    <SelectItem key={unit.id} value={unit.id}>
+                      {unit.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="edit-item-price-install">Instalación (€)</Label>
+                <Input 
+                  id="edit-item-price-install" 
+                  type="number" 
+                  value={editItemPriceInstall}
+                  onChange={(e) => setEditItemPriceInstall(e.target.value)}
+                  className="h-12" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-item-price-supply">Suministro (€)</Label>
+                <Input 
+                  id="edit-item-price-supply" 
+                  type="number" 
+                  value={editItemPriceSupply}
+                  onChange={(e) => setEditItemPriceSupply(e.target.value)}
+                  className="h-12" 
+                />
+              </div>
+            </div>
+            <Button variant="action" className="w-full" onClick={handleEditItem}>
+              Guardar cambios
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

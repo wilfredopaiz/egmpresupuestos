@@ -9,13 +9,12 @@ import {
   mockProjects,
   getTemplateById,
   getSectionById,
-  calculateProjectTotal,
   calculateItemTotal,
   formatCurrency,
   projectStatuses,
   ProjectItem,
 } from "@/data/mockData";
-import { Plus, Calculator, ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { Plus, Calculator, ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function ProyectoDetalle() {
@@ -32,7 +31,7 @@ export default function ProyectoDetalle() {
   if (!project) {
     return (
       <AppLayout title="Proyecto no encontrado">
-        <div className="text-center py-16">
+        <div className="text-center py-16 px-4">
           <p className="text-body text-muted-foreground mb-6">
             El proyecto que buscas no existe
           </p>
@@ -81,16 +80,16 @@ export default function ProyectoDetalle() {
 
   return (
     <AppLayout title={project.name}>
-      <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="space-y-6">
         {/* Cabecera del proyecto */}
         <Card>
           <CardContent className="p-5">
             <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <h2 className="text-heading font-bold">{project.name}</h2>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-heading font-bold truncate">{project.name}</h2>
                 <p className="text-body text-muted-foreground">{project.client}</p>
               </div>
-              <Badge className={`${status.color} text-small`}>
+              <Badge className={`${status.color} text-small shrink-0`}>
                 {status.label}
               </Badge>
             </div>
@@ -101,16 +100,16 @@ export default function ProyectoDetalle() {
               </p>
             )}
 
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div>
+            <div className="flex items-center justify-between pt-4 border-t gap-4">
+              <div className="min-w-0">
                 <p className="text-small text-muted-foreground">Total estimado</p>
                 <p className="text-heading font-bold text-primary">
                   {formatCurrency(total)}
                 </p>
               </div>
-              <Button variant="action" asChild>
+              <Button variant="action" asChild size="sm">
                 <Link to={`/presupuesto?proyecto=${project.id}`}>
-                  <Calculator className="h-5 w-5" />
+                  <Calculator className="h-4 w-4" />
                   Ver presupuesto
                 </Link>
               </Button>
@@ -120,13 +119,13 @@ export default function ProyectoDetalle() {
 
         {/* Lista de partidas */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-base">
                 Partidas ({currentItems.length})
               </CardTitle>
-              <Button variant="action" onClick={() => setIsAddModalOpen(true)}>
-                <Plus className="h-5 w-5" />
+              <Button variant="action" size="sm" onClick={() => setIsAddModalOpen(true)}>
+                <Plus className="h-4 w-4" />
                 Añadir
               </Button>
             </div>
@@ -223,6 +222,9 @@ export default function ProyectoDetalle() {
             Añadir partida
           </Button>
         </div>
+
+        {/* Spacer for fixed button on mobile */}
+        <div className="h-20 md:hidden" />
       </div>
 
       <AddItemModal
