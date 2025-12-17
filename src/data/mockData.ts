@@ -14,6 +14,41 @@ export const sections: Section[] = [
   { id: "pintura", name: "Pintura", icon: "🎨" },
 ];
 
+// Emojis disponibles para secciones (relacionados con construcción)
+export const sectionEmojis = [
+  "🧱", "📐", "🚿", "⚡", "🪨", "🎨", "🔧", "🪚", "🔩", "🪛",
+  "🏗️", "🏠", "🚪", "🪟", "🛁", "🚽", "💡", "🔌", "🧹", "🪣",
+  "🧰", "⚙️", "🔨", "📏", "🪜"
+];
+
+// Unidades de medida disponibles
+export const measureUnits = [
+  { id: "ud", label: "Unidades (ud)" },
+  { id: "m2", label: "Metros cuadrados (m²)" },
+  { id: "ml", label: "Metros lineales (ml)" },
+  { id: "m3", label: "Metros cúbicos (m³)" },
+  { id: "kg", label: "Kilogramos (kg)" },
+  { id: "l", label: "Litros (l)" },
+  { id: "h", label: "Horas (h)" },
+  { id: "pa", label: "Partida alzada (pa)" },
+];
+
+// Clientes mock
+export interface Client {
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+}
+
+export const mockClients: Client[] = [
+  { id: "client-1", name: "Juan García", phone: "600 111 222", email: "juan@email.com" },
+  { id: "client-2", name: "María López", phone: "600 333 444", email: "maria@email.com" },
+  { id: "client-3", name: "Antonio Martínez", phone: "600 555 666" },
+  { id: "client-4", name: "TechStart S.L.", phone: "961 234 567", email: "info@techstart.es" },
+  { id: "client-5", name: "Cliente de ejemplo" },
+];
+
 // Partidas estándar (plantillas)
 export interface ItemTemplate {
   id: string;

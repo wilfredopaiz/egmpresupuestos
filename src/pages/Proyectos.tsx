@@ -8,22 +8,22 @@ import { Link } from "react-router-dom";
 export default function Proyectos() {
   return (
     <AppLayout title="Proyectos">
-      <div className="space-y-6 w-full overflow-hidden">
+      <div className="space-y-6">
         {/* Header con botón */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <p className="text-body text-muted-foreground">
             {mockProjects.length} proyecto{mockProjects.length !== 1 ? "s" : ""} activo{mockProjects.length !== 1 ? "s" : ""}
           </p>
-          <Button variant="action" asChild className="w-full sm:w-auto">
+          <Button variant="action" asChild size="sm">
             <Link to="/nueva-obra">
-              <PlusCircle className="h-5 w-5" />
+              <PlusCircle className="h-4 w-4" />
               Nueva obra
             </Link>
           </Button>
         </div>
 
         {/* Lista de proyectos */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4">
           {mockProjects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
