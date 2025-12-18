@@ -89,8 +89,7 @@ export default {
         elevated: "var(--shadow-elevated)",
       },
       spacing: {
-        "18": "4.5rem",
-        "safe-bottom": "env(safe-area-inset-bottom, 1rem)",
+        "18": "4.5rem"
       },
       keyframes: {
         "accordion-down": {

@@ -2,8 +2,11 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { AddItemModal } from "@/components/partidas/AddItemModal";
 import {
   mockProjects,
@@ -22,13 +25,20 @@ export default function ProyectoDetalle() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ProjectItem | null>(null);
   const [items, setItems] = useState<ProjectItem[]>([]);
+  const [includeIVA, setIncludeIVA] = useState(true);
+  const [margin, setMargin] = useState(15);
 
   // Buscar proyecto (mock)
   const project = mockProjects.find((p) => p.id === id);
   
   // Usar items del estado si existen, sino los del proyecto mock
   const currentItems = items.length > 0 ? items : project?.items || [];
-  
+  const subtotal = currentItems.reduce((sum, item) => sum + calculateItemTotal(item), 0);
+  const marginAmount = subtotal * ((margin || 0) / 100);
+  const subtotalWithMargin = subtotal + marginAmount;
+  const ivaAmount = includeIVA ? subtotalWithMargin * 0.21 : 0;
+  const total = subtotalWithMargin + ivaAmount;
+
   if (!project) {
     return (
       <AppLayout title="Proyecto no encontrado">
@@ -48,7 +58,6 @@ export default function ProyectoDetalle() {
   }
 
   const status = projectStatuses[project.status];
-  const total = currentItems.reduce((sum, item) => sum + calculateItemTotal(item), 0);
 
   const handleAddItem = (data: {
     templateId: string;
@@ -266,7 +275,78 @@ export default function ProyectoDetalle() {
         </Card>
 
         {/* Botón fijo inferior en móvil */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t md:hidden safe-bottom z-50">
+        {/* Ajustes y resumen del presupuesto */}
+        <div className="flex flex-col gap-4">
+          <Card className="bg-white border border-border shadow-md">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Ajustes del presupuesto</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white shadow-sm border border-border">
+                <Label htmlFor="iva" className="text-body font-medium cursor-pointer">
+                  Incluir IVA (21%)
+                </Label>
+                <Switch
+                  id="iva"
+                  checked={includeIVA}
+                  onCheckedChange={setIncludeIVA}
+                  className="scale-110"
+                />
+              </div>
+
+              <div className="p-4 rounded-xl bg-white shadow-sm border border-border space-y-2">
+                <Label htmlFor="margin" className="text-body font-medium">
+                  Margen de beneficio (%)
+                </Label>
+                <Input
+                  id="margin"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  max="100"
+                  step={0.5}
+                  value={margin}
+                  onChange={(e) => {
+                    const next = parseFloat(e.target.value);
+                    setMargin(Number.isNaN(next) ? 0 : next);
+                  }}
+                  className="text-center text-heading font-semibold"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#2f3941] text-white border-none shadow-lg">
+            <CardContent className="p-6 space-y-3">
+              <div className="flex items-center justify-between text-body">
+                <span>Subtotal partidas</span>
+                <span>{formatCurrency(subtotal)}</span>
+              </div>
+
+              {marginAmount > 0 && (
+                <div className="flex items-center justify-between text-body">
+                  <span>Margen ({margin || 0}%)</span>
+                  <span>+ {formatCurrency(marginAmount)}</span>
+                </div>
+              )}
+
+              {includeIVA && (
+                <div className="flex items-center justify-between text-body">
+                  <span>IVA (21%)</span>
+                  <span>+ {formatCurrency(ivaAmount)}</span>
+                </div>
+              )}
+
+              <div className="pt-4 mt-2 border-t border-white/20 flex items-center justify-between">
+                <span className="text-subheading font-semibold">TOTAL</span>
+                <span className="text-display font-bold">{formatCurrency(total)}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Boton fijo inferior en movil */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t md:hidden z-50">
           <Button
             variant="action"
             size="xl"

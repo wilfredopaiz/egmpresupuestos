@@ -1,9 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  mockProjects,
-  mockClients,
-  calculateProjectTotal,
   formatCurrency,
   projectStatuses,
 } from "@/data/mockData";
@@ -12,49 +9,54 @@ import {
   Users,
   FolderKanban,
   Calculator,
+  PieChart,
+  BarChart3,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth();
-
-  // Calculate stats
-  const totalProjects = mockProjects.length;
-  const totalClients = mockClients.length;
-
-  // Projects this year
-  const projectsThisYear = mockProjects.filter(
-    (p) => p.createdAt.getFullYear() === currentYear
-  );
-  const budgetThisYear = projectsThisYear.reduce(
-    (sum, project) => sum + calculateProjectTotal(project),
-    0
-  );
-
-  // Projects this month
-  const projectsThisMonth = mockProjects.filter(
-    (p) =>
-      p.createdAt.getFullYear() === currentYear &&
-      p.createdAt.getMonth() === currentMonth
-  );
-  const budgetThisMonth = projectsThisMonth.reduce(
-    (sum, project) => sum + calculateProjectTotal(project),
-    0
-  );
-
-  // Average budget this year and month
-  const avgBudgetThisYear =
-    projectsThisYear.length > 0 ? budgetThisYear / projectsThisYear.length : 0;
-  const avgBudgetThisMonth =
-    projectsThisMonth.length > 0 ? budgetThisMonth / projectsThisMonth.length : 0;
-
-  // Projects by status
-  const projectsByStatus = mockProjects.reduce((acc, project) => {
-    acc[project.status] = (acc[project.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  // Valores fijos para simplificar y reemplazar con datos reales más adelante
+  const totalProjects = 12;
+  const totalClients = 8;
+  const budgetThisYear = 125000;
+  const budgetThisMonth = 28500;
+  const avgBudgetThisYear = 10400;
+  const avgBudgetThisMonth = 3500;
+  const projectsByStatus: Record<string, number> = {
+    planning: 4,
+    in_progress: 3,
+    completed: 2,
+    on_hold: 1,
+  };
+  const stateDistribution = [
+    { label: "Planificación", value: 35, color: "#2563eb" },
+    { label: "En obra", value: 25, color: "#f97316" },
+    { label: "Completado", value: 30, color: "#16a34a" },
+    { label: "En pausa", value: 10, color: "#6b7280" },
+  ];
+  const topBudgetProjects = [
+    { name: "Hotel Costa Azul", amount: 120000 },
+    { name: "Centro Norte", amount: 98000 },
+    { name: "Chalet Aravaca", amount: 72000 },
+    { name: "Local Serrano", amount: 54000 },
+    { name: "Vivienda Pozuelo", amount: 38000 },
+  ];
+  const distributionTotal = stateDistribution.reduce((sum, item) => sum + item.value, 0);
+  let currentAngle = 0;
+  const conicGradient =
+    distributionTotal > 0
+      ? stateDistribution
+          .map((item) => {
+            const start = currentAngle;
+            const slice = (item.value / distributionTotal) * 360;
+            const end = start + slice;
+            currentAngle = end;
+            return `${item.color} ${start}deg ${end}deg`;
+          })
+          .join(", ")
+      : "#e5e7eb";
+  const topMax = Math.max(...topBudgetProjects.map((p) => p.amount));
 
   return (
     <AppLayout title="Dashboard">
@@ -69,7 +71,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{totalProjects}</p>
-                  <p className="text-small text-muted-foreground">Proyectos</p>
+                  <p className="text-small text-muted-foreground">Proyectos Nuevos</p>
                 </div>
               </div>
             </CardContent>
@@ -83,7 +85,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{totalClients}</p>
-                  <p className="text-small text-muted-foreground">Clientes</p>
+                  <p className="text-small text-muted-foreground">Clientes Nuevos</p>
                 </div>
               </div>
             </CardContent>
@@ -91,7 +93,7 @@ export default function Dashboard() {
         </div>
 
         {/* Budget volume cards */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -101,7 +103,7 @@ export default function Dashboard() {
                 <div className="min-w-0 flex-1">
                   <p className="text-lg font-bold truncate">{formatCurrency(budgetThisYear)}</p>
                   <p className="text-small text-muted-foreground">
-                    Este año
+                    Total presupuestado este <strong>año</strong>
                   </p>
                 </div>
               </div>
@@ -117,7 +119,7 @@ export default function Dashboard() {
                 <div className="min-w-0 flex-1">
                   <p className="text-lg font-bold truncate">{formatCurrency(budgetThisMonth)}</p>
                   <p className="text-small text-muted-foreground">
-                    Este mes
+                    Total presupuestado este <strong>mes</strong>
                   </p>
                 </div>
               </div>
@@ -149,36 +151,68 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Average budget cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="bg-muted/50">
-            <CardContent className="p-4">
-              <p className="text-small text-muted-foreground mb-1">
-                Presupuesto medio (año)
-              </p>
-              <p className="text-lg font-bold">{formatCurrency(avgBudgetThisYear)}</p>
-            </CardContent>
-          </Card>
+        {/* Distribución por estado */}
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <PieChart className="h-4 w-4 text-primary" />
+              <span className="text-small font-medium">Distribución por estado</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div
+                className="h-28 w-28 rounded-full border border-muted shadow-inner"
+                style={{
+                  background: distributionTotal ? `conic-gradient(${conicGradient})` : "#e5e7eb",
+                }}
+              />
+              <div className="flex-1 space-y-2">
+                {stateDistribution.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-3 w-3 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-small">{item.label}</span>
+                    </div>
+                    <span className="text-small font-semibold">
+                      {distributionTotal ? Math.round((item.value / distributionTotal) * 100) : 0}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="bg-muted/50">
-            <CardContent className="p-4">
-              <p className="text-small text-muted-foreground mb-1">
-                Presupuesto medio (mes)
-              </p>
-              <p className="text-lg font-bold">{formatCurrency(avgBudgetThisMonth)}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick actions */}
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="action" size="lg" asChild className="h-14">
-            <Link to="/nueva-obra">Nueva obra</Link>
-          </Button>
-          <Button variant="outline" size="lg" asChild className="h-14">
-            <Link to="/partidas">Ver partidas</Link>
-          </Button>
-        </div>
+        {/* Top proyectos por presupuesto */}
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              <span className="text-small font-medium">Top 5 proyectos por presupuesto</span>
+            </div>
+            <div className="space-y-3">
+              {topBudgetProjects.map((project) => {
+                const width = topMax ? Math.round((project.amount / topMax) * 100) : 0;
+                return (
+                  <div key={project.name} className="space-y-1">
+                    <div className="flex items-center justify-between text-small">
+                      <span className="truncate">{project.name}</span>
+                      <span className="font-semibold">{formatCurrency(project.amount)}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: `${width}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );
