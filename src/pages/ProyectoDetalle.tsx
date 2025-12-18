@@ -113,34 +113,34 @@ export default function ProyectoDetalle() {
 
   return (
     <AppLayout title={project.name}>
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6 overflow-hidden">
         {/* Cabecera del proyecto */}
-        <Card>
+        <Card className="flex-shrink-0">
           <CardContent className="p-5">
-            <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
               <div className="min-w-0 flex-1">
-                <h2 className="text-heading font-bold truncate">{project.name}</h2>
+                <h2 className="text-heading font-bold break-words">{project.name}</h2>
                 <p className="text-body text-muted-foreground">{project.client}</p>
               </div>
-              <Badge className={`${status.color} text-small shrink-0`}>
+              <Badge className={`${status.color} text-small shrink-0 self-start`}>
                 {status.label}
               </Badge>
             </div>
 
             {project.notes && (
-              <p className="text-body text-muted-foreground mb-4">
+              <p className="text-body text-muted-foreground mb-4 break-words">
                 {project.notes}
               </p>
             )}
 
-            <div className="flex items-center justify-between pt-4 border-t gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t gap-4">
               <div className="min-w-0">
                 <p className="text-small text-muted-foreground">Total estimado</p>
                 <p className="text-heading font-bold text-primary">
                   {formatCurrency(total)}
                 </p>
               </div>
-              <Button variant="action" asChild size="sm">
+              <Button variant="action" asChild size="sm" className="shrink-0 w-full sm:w-auto">
                 <Link to={`/presupuesto?proyecto=${project.id}`}>
                   <Calculator className="h-4 w-4" />
                   Ver presupuesto
@@ -151,13 +151,13 @@ export default function ProyectoDetalle() {
         </Card>
 
         {/* Lista de partidas */}
-        <Card>
+        <Card className="flex-shrink-0">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-3">
               <CardTitle className="text-base">
                 Partidas ({currentItems.length})
               </CardTitle>
-              <Button variant="action" size="sm" onClick={() => setIsAddModalOpen(true)}>
+              <Button variant="action" size="sm" onClick={() => setIsAddModalOpen(true)} className="shrink-0">
                 <Plus className="h-4 w-4" />
                 Añadir
               </Button>
@@ -186,16 +186,16 @@ export default function ProyectoDetalle() {
                     key={item.id}
                     className="p-4 rounded-xl bg-muted/50 space-y-2"
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-small text-muted-foreground">
                           {section?.icon} {section?.name}
                         </p>
-                        <p className="text-body-lg font-semibold truncate">
+                        <p className="text-body-lg font-semibold break-words">
                           {template.name}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0 self-end sm:self-start">
                         <span className="text-body-lg font-bold mr-2">
                           {formatCurrency(itemTotal)}
                         </span>
@@ -254,7 +254,7 @@ export default function ProyectoDetalle() {
                     </div>
 
                     {item.notes && (
-                      <p className="text-small text-muted-foreground italic pt-1">
+                      <p className="text-small text-muted-foreground italic pt-1 break-words">
                         "{item.notes}"
                       </p>
                     )}
@@ -266,7 +266,7 @@ export default function ProyectoDetalle() {
         </Card>
 
         {/* Botón fijo inferior en móvil */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t md:hidden safe-bottom">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t md:hidden safe-bottom z-50">
           <Button
             variant="action"
             size="xl"
@@ -279,7 +279,7 @@ export default function ProyectoDetalle() {
         </div>
 
         {/* Spacer for fixed button on mobile */}
-        <div className="h-20 md:hidden" />
+        <div className="h-20 md:hidden flex-shrink-0" />
       </div>
 
       <AddItemModal

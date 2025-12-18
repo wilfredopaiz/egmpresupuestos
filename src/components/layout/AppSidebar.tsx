@@ -23,7 +23,6 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Proyectos", url: "/proyectos", icon: FolderKanban },
-  { title: "Nueva obra", url: "/nueva-obra", icon: PlusCircle },
   { title: "Partidas", url: "/partidas", icon: LayoutList },
   { title: "Ajustes", url: "/ajustes", icon: Settings },
 ];

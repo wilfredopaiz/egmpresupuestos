@@ -90,20 +90,20 @@ export default function Proyectos() {
 
   return (
     <AppLayout title="Proyectos">
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4 overflow-hidden">
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <div className="relative flex-shrink-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Buscar obra..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-12"
+            className="pl-10 h-12 w-full"
           />
         </div>
 
         {/* Filter toggle + New button */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
           <Button
             variant={hasActiveFilters ? "secondary" : "outline"}
             size="sm"
@@ -133,9 +133,9 @@ export default function Proyectos() {
             </Button>
           )}
 
-          <div className="flex-1" />
+          <div className="flex-1 min-w-0" />
 
-          <Button variant="action" asChild size="sm">
+          <Button variant="action" asChild size="sm" className="shrink-0">
             <Link to="/nueva-obra">
               <PlusCircle className="h-4 w-4" />
               <span className="hidden sm:inline">Nueva obra</span>
@@ -153,7 +153,7 @@ export default function Proyectos() {
                   Año
                 </label>
                 <Select value={yearFilter} onValueChange={setYearFilter}>
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger className="h-10 w-full">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
@@ -173,7 +173,7 @@ export default function Proyectos() {
                   Cliente
                 </label>
                 <Select value={clientFilter} onValueChange={setClientFilter}>
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger className="h-10 w-full">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
@@ -193,7 +193,7 @@ export default function Proyectos() {
                   Presupuesto
                 </label>
                 <Select value={budgetFilter} onValueChange={setBudgetFilter}>
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger className="h-10 w-full">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
@@ -209,7 +209,7 @@ export default function Proyectos() {
         </Collapsible>
 
         {/* Results count */}
-        <p className="text-small text-muted-foreground">
+        <p className="text-small text-muted-foreground flex-shrink-0">
           {filteredProjects.length} proyecto
           {filteredProjects.length !== 1 ? "s" : ""}
           {hasActiveFilters && " encontrado"}
@@ -217,7 +217,7 @@ export default function Proyectos() {
         </p>
 
         {/* Project list */}
-        <div className="grid gap-4">
+        <div className="flex flex-col gap-4">
           {filteredProjects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
