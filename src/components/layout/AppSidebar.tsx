@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import {
   FolderKanban,
@@ -6,6 +6,7 @@ import {
   LayoutList,
   Settings,
   HardHat,
+  LayoutDashboard,
 } from "lucide-react";
 import {
   Sidebar,
@@ -20,7 +21,8 @@ import {
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { title: "Proyectos", url: "/", icon: FolderKanban },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Proyectos", url: "/proyectos", icon: FolderKanban },
   { title: "Nueva obra", url: "/nueva-obra", icon: PlusCircle },
   { title: "Partidas", url: "/partidas", icon: LayoutList },
   { title: "Ajustes", url: "/ajustes", icon: Settings },
@@ -34,7 +36,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary">
             <HardHat className="h-6 w-6 text-sidebar-primary-foreground" />
           </div>
@@ -48,7 +50,7 @@ export function AppSidebar() {
               </span>
             </div>
           )}
-        </div>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent className="px-2">
