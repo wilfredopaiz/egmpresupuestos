@@ -1,8 +1,7 @@
-import Proyectos from "./Proyectos";
+import Dashboard from "./Dashboard";
 
-// Redirigir a la página de proyectos
 const Index = () => {
-  return <Proyectos />;
+  return <Dashboard />;
 };
 
 export default Index;

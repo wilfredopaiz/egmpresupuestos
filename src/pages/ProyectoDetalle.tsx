@@ -14,12 +14,13 @@ import {
   projectStatuses,
   ProjectItem,
 } from "@/data/mockData";
-import { Plus, Calculator, ArrowLeft, Trash2 } from "lucide-react";
+import { Plus, Calculator, ArrowLeft, Trash2, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function ProyectoDetalle() {
   const { id } = useParams();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ProjectItem | null>(null);
   const [items, setItems] = useState<ProjectItem[]>([]);
 
   // Buscar proyecto (mock)
@@ -36,7 +37,7 @@ export default function ProyectoDetalle() {
             El proyecto que buscas no existe
           </p>
           <Button variant="action" asChild>
-            <Link to="/">
+            <Link to="/proyectos">
               <ArrowLeft className="h-5 w-5" />
               Volver a proyectos
             </Link>
@@ -56,18 +57,50 @@ export default function ProyectoDetalle() {
     includeSupply: boolean;
     optionEnabled: boolean;
     notes: string;
+    customPriceInstallation?: number;
+    customPriceSupply?: number;
   }) => {
-    const newItem: ProjectItem = {
-      id: `item-${Date.now()}`,
-      templateId: data.templateId,
-      quantity: data.quantity,
-      includeInstallation: data.includeInstallation,
-      includeSupply: data.includeSupply,
-      optionEnabled: data.optionEnabled,
-      notes: data.notes,
-    };
+    if (editingItem) {
+      // Update existing item
+      setItems(
+        currentItems.map((item) =>
+          item.id === editingItem.id
+            ? {
+                ...item,
+                templateId: data.templateId,
+                quantity: data.quantity,
+                includeInstallation: data.includeInstallation,
+                includeSupply: data.includeSupply,
+                optionEnabled: data.optionEnabled,
+                notes: data.notes,
+              }
+            : item
+        )
+      );
+      setEditingItem(null);
+    } else {
+      // Add new item
+      const newItem: ProjectItem = {
+        id: `item-${Date.now()}`,
+        templateId: data.templateId,
+        quantity: data.quantity,
+        includeInstallation: data.includeInstallation,
+        includeSupply: data.includeSupply,
+        optionEnabled: data.optionEnabled,
+        notes: data.notes,
+      };
+      setItems([...currentItems, newItem]);
+    }
+  };
 
-    setItems([...currentItems, newItem]);
+  const handleEditItem = (item: ProjectItem) => {
+    setEditingItem(item);
+    setIsAddModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false);
+    setEditingItem(null);
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -162,10 +195,18 @@ export default function ProyectoDetalle() {
                           {template.name}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-body-lg font-bold">
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-body-lg font-bold mr-2">
                           {formatCurrency(itemTotal)}
                         </span>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => handleEditItem(item)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon-sm"
@@ -177,10 +218,24 @@ export default function ProyectoDetalle() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 text-small">
-                      <span className="px-2 py-1 rounded-md bg-background">
+                    {/* Prices breakdown */}
+                    <div className="flex flex-wrap gap-2 text-small text-muted-foreground">
+                      <span>
                         {item.quantity.toLocaleString("es-ES")} {template.unit}
                       </span>
+                      {item.includeInstallation && (
+                        <span>
+                          • Inst: {formatCurrency(template.priceInstallation)}/{template.unit}
+                        </span>
+                      )}
+                      {item.includeSupply && template.priceSupply && (
+                        <span>
+                          • Sum: {formatCurrency(template.priceSupply)}/{template.unit}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 text-small">
                       {item.includeInstallation && (
                         <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">
                           Instalación
@@ -229,8 +284,20 @@ export default function ProyectoDetalle() {
 
       <AddItemModal
         open={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={handleCloseModal}
         onAdd={handleAddItem}
+        editData={
+          editingItem
+            ? {
+                templateId: editingItem.templateId,
+                quantity: editingItem.quantity,
+                includeInstallation: editingItem.includeInstallation,
+                includeSupply: editingItem.includeSupply,
+                optionEnabled: editingItem.optionEnabled,
+                notes: editingItem.notes,
+              }
+            : undefined
+        }
       />
     </AppLayout>
   );

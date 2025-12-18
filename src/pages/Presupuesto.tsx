@@ -35,7 +35,7 @@ export default function Presupuesto() {
           <p className="text-muted-foreground mb-6">
             Selecciona un proyecto para ver su presupuesto
           </p>
-          <Button variant="action" onClick={() => navigate("/")}>
+          <Button variant="action" onClick={() => navigate("/proyectos")}>
             <ArrowLeft className="h-5 w-5" />
             Ir a Proyectos
           </Button>
@@ -68,12 +68,12 @@ export default function Presupuesto() {
 
   return (
     <AppLayout title="Presupuesto">
-      <div className="space-y-6 w-full px-0">
+      <div className="space-y-6 w-full">
         {/* Back button */}
         <Button 
           variant="ghost" 
           size="sm" 
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/proyectos")}
           className="gap-2 -ml-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -165,10 +165,24 @@ export default function Presupuesto() {
                     </span>
                   </div>
 
+                  {/* Price breakdown */}
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-small text-muted-foreground">
                     <span>
                       {item.quantity.toLocaleString("es-ES")} {template.unit}
                     </span>
+                    {item.includeInstallation && (
+                      <span>
+                        • Inst: {formatCurrency(template.priceInstallation)}/{template.unit}
+                      </span>
+                    )}
+                    {item.includeSupply && template.priceSupply && (
+                      <span>
+                        • Sum: {formatCurrency(template.priceSupply)}/{template.unit}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-small text-muted-foreground">
                     {item.includeInstallation && <span>• Instalación</span>}
                     {item.includeSupply && <span>• Suministro</span>}
                   </div>

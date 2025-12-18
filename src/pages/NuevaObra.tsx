@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { HardHat, Plus, User } from "lucide-react";
+import { HardHat, Plus, User, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { mockClients } from "@/data/mockData";
 
@@ -50,7 +50,7 @@ export default function NuevaObra() {
       description: `"${nombre}" se ha creado correctamente`,
     });
 
-    navigate("/");
+    navigate("/proyectos");
   };
 
   const handleAddClient = () => {
@@ -77,7 +77,18 @@ export default function NuevaObra() {
 
   return (
     <AppLayout title="Nueva obra">
-      <div className="w-full max-w-lg mx-auto">
+      <div className="w-full max-w-lg mx-auto space-y-4">
+        {/* Back button */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigate("/proyectos")}
+          className="gap-2 -ml-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Proyectos
+        </Button>
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-6">
