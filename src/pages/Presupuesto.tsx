@@ -7,6 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   mockProjects,
   calculateProjectTotal,
   calculateProjectTotalBySection,
@@ -14,16 +19,18 @@ import {
   getSectionById,
   getTemplateById,
 } from "@/data/mockData";
-import { Calculator, FileText, Share2, ArrowLeft } from "lucide-react";
+import { Calculator, FileText, Share2, ArrowLeft, ChevronDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function Presupuesto() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const projectIdFromUrl = searchParams.get("proyecto");
+  const isEditMode = searchParams.get("modo") === "editar";
   
   const [includeIVA, setIncludeIVA] = useState(true);
   const [margin, setMargin] = useState("15");
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   const project = mockProjects.find((p) => p.id === projectIdFromUrl);
   
@@ -198,70 +205,120 @@ export default function Presupuesto() {
           </CardContent>
         </Card>
 
-        {/* Ajustes */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Ajustes del presupuesto</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/50">
-              <Label htmlFor="iva" className="text-body font-medium cursor-pointer">
-                Incluir IVA (21%)
-              </Label>
-              <Switch
-                id="iva"
-                checked={includeIVA}
-                onCheckedChange={setIncludeIVA}
-              />
-            </div>
-
-            <div className="p-4 rounded-lg bg-muted/50">
-              <Label htmlFor="margin" className="text-body font-medium mb-2 block">
-                Margen de beneficio (%)
-              </Label>
-              <Input
-                id="margin"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                max="100"
-                step="0.5"
-                value={margin}
-                onChange={(e) => setMargin(e.target.value)}
-                className="text-center text-heading font-bold"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Totales */}
-        <Card className="bg-secondary text-secondary-foreground">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex justify-between text-body">
-              <span>Subtotal partidas</span>
-              <span>{formatCurrency(subtotal)}</span>
-            </div>
-
-            {parseFloat(margin) > 0 && (
-              <div className="flex justify-between text-body">
-                <span>Margen ({margin}%)</span>
-                <span>+ {formatCurrency(marginAmount)}</span>
+        {/* Ajustes - Solo en modo edición */}
+        {isEditMode && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Ajustes del presupuesto</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/50">
+                <Label htmlFor="iva" className="text-body font-medium cursor-pointer">
+                  Incluir IVA (21%)
+                </Label>
+                <Switch
+                  id="iva"
+                  checked={includeIVA}
+                  onCheckedChange={setIncludeIVA}
+                />
               </div>
-            )}
 
-            {includeIVA && (
-              <div className="flex justify-between text-body">
-                <span>IVA (21%)</span>
-                <span>+ {formatCurrency(ivaAmount)}</span>
+              <div className="p-4 rounded-lg bg-muted/50">
+                <Label htmlFor="margin" className="text-body font-medium mb-2 block">
+                  Margen de beneficio (%)
+                </Label>
+                <Input
+                  id="margin"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={margin}
+                  onChange={(e) => setMargin(e.target.value)}
+                  className="text-center text-heading font-bold"
+                />
               </div>
-            )}
+            </CardContent>
+          </Card>
+        )}
 
-            <div className="flex justify-between items-center pt-4 border-t border-secondary-foreground/20">
-              <span className="text-subheading font-semibold">TOTAL</span>
-              <span className="text-display">{formatCurrency(total)}</span>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Totales - Vista cliente (colapsable) o Vista edición */}
+        {isEditMode ? (
+          /* Vista de edición - Todo visible */
+          <Card className="bg-secondary text-secondary-foreground">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex justify-between text-body">
+                <span>Subtotal partidas</span>
+                <span>{formatCurrency(subtotal)}</span>
+              </div>
+
+              {parseFloat(margin) > 0 && (
+                <div className="flex justify-between text-body">
+                  <span>Margen ({margin}%)</span>
+                  <span>+ {formatCurrency(marginAmount)}</span>
+                </div>
+              )}
+
+              {includeIVA && (
+                <div className="flex justify-between text-body">
+                  <span>IVA (21%)</span>
+                  <span>+ {formatCurrency(ivaAmount)}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-4 border-t border-secondary-foreground/20">
+                <span className="text-subheading font-semibold">TOTAL</span>
+                <span className="text-display">{formatCurrency(total)}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          /* Vista cliente - Total grande con desglose colapsable */
+          <Card className="bg-secondary text-secondary-foreground">
+            <CardContent className="p-6 space-y-4">
+              {/* Total prominente */}
+              <div className="flex justify-between items-center">
+                <span className="text-subheading font-semibold">TOTAL</span>
+                <span className="text-display">{formatCurrency(total)}</span>
+              </div>
+
+              {/* Desglose colapsable */}
+              <Collapsible open={showBreakdown} onOpenChange={setShowBreakdown}>
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-secondary-foreground/10 gap-2"
+                  >
+                    Ver desglose
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showBreakdown ? "rotate-180" : ""}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-4 space-y-3 border-t border-secondary-foreground/20 mt-4">
+                  <div className="flex justify-between text-body">
+                    <span>Subtotal partidas</span>
+                    <span>{formatCurrency(subtotal)}</span>
+                  </div>
+
+                  {parseFloat(margin) > 0 && (
+                    <div className="flex justify-between text-body">
+                      <span>Margen ({margin}%)</span>
+                      <span>+ {formatCurrency(marginAmount)}</span>
+                    </div>
+                  )}
+
+                  {includeIVA && (
+                    <div className="flex justify-between text-body">
+                      <span>IVA (21%)</span>
+                      <span>+ {formatCurrency(ivaAmount)}</span>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Texto legal */}
         <p className="text-small text-muted-foreground text-center italic px-4">
