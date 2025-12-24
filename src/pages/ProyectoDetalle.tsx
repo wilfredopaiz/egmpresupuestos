@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { AddItemModal } from "@/components/partidas/AddItemModal";
 import {
-  mockProjects,
   getTemplateById,
   getSectionById,
   calculateItemTotal,
@@ -17,22 +16,20 @@ import {
   projectStatuses,
   ProjectItem,
 } from "@/data/mockData";
+import { useProject, useProjectActions } from "@/hooks/useProjects";
 import { Plus, Calculator, ArrowLeft, Trash2, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function ProyectoDetalle() {
   const { id } = useParams();
+  const { project } = useProject(id || null);
+  const { updateProject } = useProjectActions();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ProjectItem | null>(null);
-  const [items, setItems] = useState<ProjectItem[]>([]);
   const [includeIVA, setIncludeIVA] = useState(true);
   const [margin, setMargin] = useState(15);
 
-  // Buscar proyecto (mock)
-  const project = mockProjects.find((p) => p.id === id);
-  
-  // Usar items del estado si existen, sino los del proyecto mock
-  const currentItems = items.length > 0 ? items : project?.items || [];
+  const currentItems = project?.items || [];
   const subtotal = currentItems.reduce((sum, item) => sum + calculateItemTotal(item), 0);
   const marginAmount = subtotal * ((margin || 0) / 100);
   const subtotalWithMargin = subtotal + marginAmount;
@@ -71,21 +68,20 @@ export default function ProyectoDetalle() {
   }) => {
     if (editingItem) {
       // Update existing item
-      setItems(
-        currentItems.map((item) =>
-          item.id === editingItem.id
-            ? {
-                ...item,
-                templateId: data.templateId,
-                quantity: data.quantity,
-                includeInstallation: data.includeInstallation,
-                includeSupply: data.includeSupply,
-                optionEnabled: data.optionEnabled,
-                notes: data.notes,
-              }
-            : item
-        )
+      const updatedItems = currentItems.map((item) =>
+        item.id === editingItem.id
+          ? {
+              ...item,
+              templateId: data.templateId,
+              quantity: data.quantity,
+              includeInstallation: data.includeInstallation,
+              includeSupply: data.includeSupply,
+              optionEnabled: data.optionEnabled,
+              notes: data.notes,
+            }
+          : item
       );
+      updateProject(project.id, { items: updatedItems });
       setEditingItem(null);
     } else {
       // Add new item
@@ -98,7 +94,7 @@ export default function ProyectoDetalle() {
         optionEnabled: data.optionEnabled,
         notes: data.notes,
       };
-      setItems([...currentItems, newItem]);
+      updateProject(project.id, { items: [...currentItems, newItem] });
     }
   };
 
@@ -113,7 +109,8 @@ export default function ProyectoDetalle() {
   };
 
   const handleDeleteItem = (itemId: string) => {
-    setItems(currentItems.filter((item) => item.id !== itemId));
+    const updatedItems = currentItems.filter((item) => item.id !== itemId);
+    updateProject(project.id, { items: updatedItems });
     toast({
       title: "Partida eliminada",
       description: "La partida se ha eliminado del proyecto",

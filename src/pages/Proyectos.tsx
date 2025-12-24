@@ -15,11 +15,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { mockProjects, mockClients, calculateProjectTotal } from "@/data/mockData";
+import { mockClients, calculateProjectTotal } from "@/data/mockData";
+import { useProjects } from "@/hooks/useProjects";
 import { PlusCircle, Search, Filter, ChevronDown, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Proyectos() {
+  const { projects } = useProjects();
   const [searchQuery, setSearchQuery] = useState("");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
@@ -29,14 +31,14 @@ export default function Proyectos() {
   // Get unique years from projects
   const years = useMemo(() => {
     const uniqueYears = [
-      ...new Set(mockProjects.map((p) => p.createdAt.getFullYear())),
+      ...new Set(projects.map((p) => p.createdAt.getFullYear())),
     ].sort((a, b) => b - a);
     return uniqueYears;
-  }, []);
+  }, [projects]);
 
   // Filter projects
   const filteredProjects = useMemo(() => {
-    return mockProjects.filter((project) => {
+    return projects.filter((project) => {
       // Search filter
       if (
         searchQuery &&
@@ -76,7 +78,7 @@ export default function Proyectos() {
 
       return true;
     });
-  }, [searchQuery, yearFilter, clientFilter, budgetFilter]);
+  }, [projects, searchQuery, yearFilter, clientFilter, budgetFilter]);
 
   const hasActiveFilters =
     yearFilter !== "all" || clientFilter !== "all" || budgetFilter !== "all";

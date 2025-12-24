@@ -1,9 +1,12 @@
+import { useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   formatCurrency,
   projectStatuses,
+  calculateProjectTotal,
 } from "@/data/mockData";
+import { useProjects } from "@/hooks/useProjects";
 import {
   TrendingUp,
   Users,
@@ -16,32 +19,73 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
-  // Valores fijos para simplificar y reemplazar con datos reales más adelante
-  const totalProjects = 12;
-  const totalClients = 8;
-  const budgetThisYear = 125000;
-  const budgetThisMonth = 28500;
-  const avgBudgetThisYear = 10400;
-  const avgBudgetThisMonth = 3500;
-  const projectsByStatus: Record<string, number> = {
-    planning: 4,
-    in_progress: 3,
-    completed: 2,
-    on_hold: 1,
-  };
+  const { projects } = useProjects();
+  
+  // Valores calculados desde proyectos reales
+  const stats = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    
+    const projectsThisYear = projects.filter(
+      (p) => p.createdAt.getFullYear() === currentYear
+    );
+    const projectsThisMonth = projectsThisYear.filter(
+      (p) => p.createdAt.getMonth() === currentMonth
+    );
+    
+    const budgetThisYear = projectsThisYear.reduce(
+      (sum, p) => sum + calculateProjectTotal(p),
+      0
+    );
+    const budgetThisMonth = projectsThisMonth.reduce(
+      (sum, p) => sum + calculateProjectTotal(p),
+      0
+    );
+    
+    const avgBudgetThisYear =
+      projectsThisYear.length > 0 ? budgetThisYear / projectsThisYear.length : 0;
+    const avgBudgetThisMonth =
+      projectsThisMonth.length > 0 ? budgetThisMonth / projectsThisMonth.length : 0;
+    
+    const projectsByStatus: Record<string, number> = {};
+    projects.forEach((p) => {
+      projectsByStatus[p.status] = (projectsByStatus[p.status] || 0) + 1;
+    });
+    
+    const topBudgetProjects = [...projects]
+      .sort((a, b) => calculateProjectTotal(b) - calculateProjectTotal(a))
+      .slice(0, 5)
+      .map((p) => ({ name: p.name, amount: calculateProjectTotal(p) }));
+    
+    return {
+      totalProjects: projects.length,
+      totalClients: [...new Set(projects.map((p) => p.client))].length,
+      budgetThisYear,
+      budgetThisMonth,
+      avgBudgetThisYear,
+      avgBudgetThisMonth,
+      projectsByStatus,
+      topBudgetProjects,
+    };
+  }, [projects]);
+
+  const { 
+    totalProjects, 
+    totalClients, 
+    budgetThisYear, 
+    budgetThisMonth,
+    projectsByStatus,
+    topBudgetProjects 
+  } = stats;
+  
   const stateDistribution = [
-    { label: "Planificación", value: 35, color: "#2563eb" },
-    { label: "En obra", value: 25, color: "#f97316" },
-    { label: "Completado", value: 30, color: "#16a34a" },
-    { label: "En pausa", value: 10, color: "#6b7280" },
-  ];
-  const topBudgetProjects = [
-    { name: "Hotel Costa Azul", amount: 120000 },
-    { name: "Centro Norte", amount: 98000 },
-    { name: "Chalet Aravaca", amount: 72000 },
-    { name: "Local Serrano", amount: 54000 },
-    { name: "Vivienda Pozuelo", amount: 38000 },
-  ];
+    { label: "En medición", value: projectsByStatus["en-medicion"] || 0, color: "#f59e0b" },
+    { label: "Presupuestado", value: projectsByStatus["presupuestado"] || 0, color: "#3b82f6" },
+    { label: "Aprobado", value: projectsByStatus["aprobado"] || 0, color: "#22c55e" },
+    { label: "En obra", value: projectsByStatus["en-obra"] || 0, color: "#a855f7" },
+    { label: "Finalizado", value: projectsByStatus["finalizado"] || 0, color: "#6b7280" },
+  ].filter(s => s.value > 0);
   const distributionTotal = stateDistribution.reduce((sum, item) => sum + item.value, 0);
   let currentAngle = 0;
   const conicGradient =
