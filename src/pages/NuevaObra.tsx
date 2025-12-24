@@ -22,9 +22,11 @@ import {
 import { HardHat, Plus, User, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { mockClients } from "@/data/mockData";
+import { useProjectActions } from "@/hooks/useProjects";
 
 export default function NuevaObra() {
   const navigate = useNavigate();
+  const { createProject } = useProjectActions();
   const [nombre, setNombre] = useState("");
   const [clienteId, setClienteId] = useState("");
   const [notas, setNotas] = useState("");
@@ -44,13 +46,23 @@ export default function NuevaObra() {
       return;
     }
 
-    // En una app real, aquí guardaríamos el proyecto
+    const selectedClient = mockClients.find(c => c.id === clienteId);
+    const clientName = selectedClient?.name || "Sin cliente";
+
+    // Crear el proyecto y obtener el nuevo proyecto
+    const newProject = createProject({
+      name: nombre,
+      client: clientName,
+      notes: notas || undefined,
+    });
+
     toast({
       title: "Obra creada",
       description: `"${nombre}" se ha creado correctamente`,
     });
 
-    navigate("/proyectos");
+    // Redirigir a la página de edición del proyecto
+    navigate(`/proyecto/${newProject.id}`);
   };
 
   const handleAddClient = () => {

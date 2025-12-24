@@ -1,25 +1,35 @@
 import { useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
-  mockProjects,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   calculateProjectTotal,
   calculateProjectTotalBySection,
   formatCurrency,
   getSectionById,
   getTemplateById,
+  projectStatuses,
+  ProjectStatus,
 } from "@/data/mockData";
-import { Calculator, FileText, Share2, ArrowLeft, ChevronDown } from "lucide-react";
+import { useProject, useProjectActions } from "@/hooks/useProjects";
+import { Calculator, FileText, Share2, ArrowLeft, ChevronDown, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function Presupuesto() {
@@ -28,11 +38,13 @@ export default function Presupuesto() {
   const projectIdFromUrl = searchParams.get("proyecto");
   const isEditMode = searchParams.get("modo") === "editar";
   
+  const { project } = useProject(projectIdFromUrl);
+  const { updateProject } = useProjectActions();
+  
   const [includeIVA, setIncludeIVA] = useState(true);
   const [margin, setMargin] = useState("15");
   const [showBreakdown, setShowBreakdown] = useState(false);
-
-  const project = mockProjects.find((p) => p.id === projectIdFromUrl);
+  const [isEditingHeader, setIsEditingHeader] = useState(false);
   
   // If no project selected, redirect to projects
   if (!project) {
@@ -87,11 +99,72 @@ export default function Presupuesto() {
           Proyectos
         </Button>
 
-        {/* Project name */}
-        <div className="pb-2">
-          <h2 className="text-xl font-bold">{project.name}</h2>
-          <p className="text-sm text-muted-foreground">{project.client}</p>
+        {/* Project header with edit button */}
+        <div className="flex items-start justify-between gap-3 pb-2">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-bold break-words">{project.name}</h2>
+            <p className="text-sm text-muted-foreground">{project.client}</p>
+            <Badge className={`${projectStatuses[project.status].color} text-small mt-2`}>
+              {projectStatuses[project.status].label}
+            </Badge>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditingHeader(!isEditingHeader)}
+              className="gap-1"
+            >
+              <Pencil className="h-4 w-4" />
+              <span className="hidden sm:inline">Editar</span>
+            </Button>
+            <Button variant="action" size="sm" asChild>
+              <Link to={`/proyecto/${project.id}`}>
+                Editar partidas
+              </Link>
+            </Button>
+          </div>
         </div>
+
+        {/* Edición rápida de estado */}
+        {isEditingHeader && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-4 space-y-3">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Estado del presupuesto</Label>
+                <Select
+                  value={project.status}
+                  onValueChange={(value: ProjectStatus) => {
+                    updateProject(project.id, { status: value });
+                    toast({
+                      title: "Estado actualizado",
+                      description: `El estado se ha cambiado a "${projectStatuses[value].label}"`,
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background">
+                    {Object.entries(projectStatuses).map(([key, { label }]) => (
+                      <SelectItem key={key} value={key}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditingHeader(false)}
+                className="w-full"
+              >
+                Cerrar
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Desglose por sección */}
         <Card>
