@@ -6,6 +6,7 @@ import {
   FolderKanban,
   PlusCircle,
   LayoutList,
+  Users,
   Settings,
   HardHat,
   LayoutDashboard,
@@ -27,6 +28,7 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Proyectos", url: "/proyectos", icon: FolderKanban },
+  { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Partidas", url: "/partidas", icon: LayoutList },
   { title: "Ajustes", url: "/ajustes", icon: Settings },
 ];

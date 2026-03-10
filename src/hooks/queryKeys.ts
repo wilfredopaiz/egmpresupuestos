@@ -5,6 +5,7 @@ export const queryKeys = {
   },
   clients: {
     all: ["clients"] as const,
+    detail: (id: string) => ["clients", id] as const,
   },
   sections: {
     all: ["sections"] as const,

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { Button } from "@/components/ui/button";
@@ -19,16 +19,22 @@ import { calculateProjectTotal } from "@/lib/calculations";
 import { useClients } from "@/hooks/useClients";
 import { useProjects } from "@/hooks/useProjects";
 import { PlusCircle, Search, Filter, ChevronDown, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 export default function Proyectos() {
+  const [searchParams] = useSearchParams();
+  const clientIdFromUrl = searchParams.get("client_id");
   const { projects, isLoading, error } = useProjects();
   const { data: clients = [] } = useClients();
   const [searchQuery, setSearchQuery] = useState("");
   const [yearFilter, setYearFilter] = useState<string>("all");
-  const [clientFilter, setClientFilter] = useState<string>("all");
+  const [clientFilter, setClientFilter] = useState<string>(clientIdFromUrl ?? "all");
   const [budgetFilter, setBudgetFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    setClientFilter(clientIdFromUrl ?? "all");
+  }, [clientIdFromUrl]);
 
   // Get unique years from projects
   const years = useMemo(() => {
@@ -58,8 +64,7 @@ export default function Proyectos() {
       }
 
       // Client filter
-      const clientName = project.client?.name ?? project.client_name ?? "Sin cliente";
-      if (clientFilter !== "all" && clientName !== clientFilter) {
+      if (clientFilter !== "all" && project.client_id !== clientFilter) {
         return false;
       }
 
@@ -200,7 +205,7 @@ export default function Proyectos() {
                   <SelectContent className="bg-background">
                     <SelectItem value="all">Todos los clientes</SelectItem>
                     {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.name}>
+                      <SelectItem key={client.id} value={client.id}>
                         {client.name}
                       </SelectItem>
                     ))}
