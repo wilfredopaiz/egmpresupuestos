@@ -21,6 +21,8 @@ Resolver los problemas de persistencia y consistencia de datos que existen actua
 004-corregir-rls-single-tenant.md     → Reemplazar RLS multi-tenant por single-tenant
 005-pagina-clientes.md                → Página /clientes con CRUD completo
 006-crud-partidas-secciones.md        → CRUD completo + ocultar secciones y plantillas
+007-generacion-pdf-presupuesto.md     → Exportar presupuesto como PDF
+008-adjuntos-imagenes-proyecto.md     → Subir imágenes por proyecto con Storage privado
 ```
 
 Las tasks son independientes entre sí, pero el orden sugerido va de menor a mayor impacto en el schema.

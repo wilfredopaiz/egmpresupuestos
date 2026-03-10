@@ -23,6 +23,7 @@ import { useProject, useUpdateProject } from "@/hooks/useProjects";
 import { Calculator, FileText, Share2, ArrowLeft, ChevronDown, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useSections } from "@/hooks/useSections";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 export default function Presupuesto() {
   const [searchParams] = useSearchParams();
@@ -33,10 +34,12 @@ export default function Presupuesto() {
   const { project, isLoading, error } = useProject(projectIdFromUrl);
   const updateProject = useUpdateProject();
   const { data: sections = [] } = useSections();
+  const { data: appSettings } = useAppSettings();
 
   const [marginInput, setMarginInput] = useState<string | null>(null);
   const [ivaInput, setIvaInput] = useState<string | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   if (isLoading) {
     return (
@@ -77,11 +80,77 @@ export default function Presupuesto() {
     });
   };
 
-  const handleExport = () => {
-    toast({
-      title: "Exportar PDF",
-      description: "Generando documento (demo)",
+  const getLogoDataUrl = async (): Promise<string | undefined> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return resolve(undefined);
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        } catch {
+          resolve(undefined);
+        }
+      };
+      img.onerror = () => resolve(undefined);
+      img.src = "/logo.webp";
     });
+  };
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const [{ pdf }, { PresupuestoPDF }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/components/presupuesto/PresupuestoPDF"),
+      ]);
+      const logoDataUrl = await getLogoDataUrl();
+
+      const blob = await pdf(
+        <PresupuestoPDF
+          project={project}
+          appSettings={appSettings}
+          subtotal={subtotal}
+          subtotalWithMargin={subtotalWithMargin}
+          marginPercentage={marginPercentage}
+          includeIva={includeIVA}
+          ivaPercentage={ivaPercentage}
+          ivaAmount={ivaAmount}
+          total={total}
+          logoUrl={logoDataUrl}
+        />,
+      ).toBlob();
+
+      const sanitizedProjectName = project.name
+        .trim()
+        .replace(/\s+/g, "_")
+        .replace(/[^a-zA-Z0-9_-]/g, "");
+      const filename = `Presupuesto_${sanitizedProjectName || "obra"}.pdf`;
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "PDF generado",
+        description: "El presupuesto se ha descargado correctamente",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "No se pudo generar el PDF",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -181,10 +250,10 @@ export default function Presupuesto() {
                     )}
                   </div>
 
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-small text-muted-foreground">
+                  {/* <div className="flex flex-wrap gap-x-4 gap-y-1 text-small text-muted-foreground">
                     {item.include_installation && <span>Instalación</span>}
                     {item.include_supply && <span>Suministro</span>}
-                  </div>
+                  </div> */}
 
                   {item.notes && <p className="text-small text-muted-foreground italic">"{item.notes}"</p>}
                 </div>
@@ -353,9 +422,9 @@ export default function Presupuesto() {
             <Share2 className="h-5 w-5" />
             Compartir
           </Button>
-          <Button variant="action" size="lg" className="flex-1" onClick={handleExport}>
+          <Button variant="action" size="lg" className="flex-1" onClick={handleExport} disabled={isExporting}>
             <FileText className="h-5 w-5" />
-            Exportar PDF
+            {isExporting ? "Generando PDF..." : "Exportar PDF"}
           </Button>
         </div>
       </div>
