@@ -17,4 +17,7 @@ export const queryKeys = {
   appSettings: {
     one: ["app-settings"] as const,
   },
+  attachments: {
+    byProject: (projectId: string) => ["attachments", "project", projectId] as const,
+  },
 };

@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AddItemModal } from "@/components/partidas/AddItemModal";
+import { AttachmentUploader } from "@/components/attachments/AttachmentUploader";
+import { AttachmentGrid } from "@/components/attachments/AttachmentGrid";
 import { calculateItemTotal, formatCurrency } from "@/lib/calculations";
 import { PROJECT_STATUSES } from "@/lib/constants";
 import type { ProjectStatus } from "@/types";
@@ -25,7 +27,8 @@ import {
   useRemoveProjectItem,
   useUpdateProject,
 } from "@/hooks/useProjects";
-import { Plus, Calculator, ArrowLeft, Trash2, Pencil } from "lucide-react";
+import { useAttachments, useDeleteAttachment } from "@/hooks/useAttachments";
+import { Plus, Calculator, ArrowLeft, Trash2, Pencil, Paperclip } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function ProyectoDetalle() {
@@ -35,11 +38,14 @@ export default function ProyectoDetalle() {
   const updateItem = useUpdateProjectItem();
   const removeItem = useRemoveProjectItem();
   const updateProject = useUpdateProject();
+  const { data: attachments = [] } = useAttachments(id || null);
+  const deleteAttachment = useDeleteAttachment();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [marginInput, setMarginInput] = useState<string | null>(null);
   const [ivaInput, setIvaInput] = useState<string | null>(null);
+  const [showUploader, setShowUploader] = useState(false);
 
   if (isLoading) {
     return (
@@ -144,6 +150,31 @@ export default function ProyectoDetalle() {
     });
   };
 
+  const handleDeleteAttachment = (attachment: any) => {
+    if (!id) return;
+    const confirmed = window.confirm(`Eliminar "${attachment.filename}"?`);
+    if (!confirmed) return;
+
+    deleteAttachment.mutate(
+      { projectId: id, attachment },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Adjunto eliminado",
+            description: "La imagen se ha eliminado correctamente",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "No se pudo eliminar la imagen",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
   return (
     <AppLayout title={project.name}>
       <div className="flex flex-col gap-6 overflow-hidden">
@@ -199,6 +230,25 @@ export default function ProyectoDetalle() {
                 </Link>
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Paperclip className="h-4 w-4 text-primary" />
+                Adjuntos ({attachments.length})
+              </CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setShowUploader((prev) => !prev)}>
+                <Plus className="h-4 w-4" />
+                {showUploader ? "Cerrar" : "Anadir"}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {showUploader && id && <AttachmentUploader projectId={id} />}
+            <AttachmentGrid attachments={attachments} onDelete={handleDeleteAttachment} />
           </CardContent>
         </Card>
 

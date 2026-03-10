@@ -149,6 +149,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      project_attachments: {
+        Row: {
+          created_at: string;
+          filename: string;
+          id: string;
+          mime_type: string;
+          project_id: string;
+          size_bytes: number;
+          storage_path: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          filename: string;
+          id?: string;
+          mime_type: string;
+          project_id: string;
+          size_bytes: number;
+          storage_path: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          filename?: string;
+          id?: string;
+          mime_type?: string;
+          project_id?: string;
+          size_bytes?: number;
+          storage_path?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_attachments_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_attachments_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       project_items: {
         Row: {
           created_at: string;

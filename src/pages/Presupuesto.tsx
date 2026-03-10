@@ -20,10 +20,12 @@ import {
 } from "@/lib/calculations";
 import { PROJECT_STATUSES } from "@/lib/constants";
 import { useProject, useUpdateProject } from "@/hooks/useProjects";
+import { useAttachments } from "@/hooks/useAttachments";
 import { Calculator, FileText, Share2, ArrowLeft, ChevronDown, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useSections } from "@/hooks/useSections";
 import { useAppSettings } from "@/hooks/useAppSettings";
+import { AttachmentGrid } from "@/components/attachments/AttachmentGrid";
 
 export default function Presupuesto() {
   const [searchParams] = useSearchParams();
@@ -35,6 +37,7 @@ export default function Presupuesto() {
   const updateProject = useUpdateProject();
   const { data: sections = [] } = useSections();
   const { data: appSettings } = useAppSettings();
+  const { data: attachments = [] } = useAttachments(projectIdFromUrl);
 
   const [marginInput, setMarginInput] = useState<string | null>(null);
   const [ivaInput, setIvaInput] = useState<string | null>(null);
@@ -206,6 +209,18 @@ export default function Presupuesto() {
               <span className="text-body-lg font-semibold">Subtotal</span>
               <span className="text-heading font-bold">{formatCurrency(subtotal)}</span>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileText className="h-5 w-5 text-primary" />
+              Adjuntos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AttachmentGrid attachments={attachments} readOnly />
           </CardContent>
         </Card>
 
