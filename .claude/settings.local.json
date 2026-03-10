@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"supabase\\\\|firebase\\\\|auth\\\\|auth0\" /c/Users/wil/Proyectos/egmpresupuestos/src --include=*.ts --include=*.tsx --include=*.json)"
+    ]
+  }
+}
