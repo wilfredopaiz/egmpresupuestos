@@ -84,14 +84,23 @@ export default function Proyectos() {
       if (budgetFilter !== "all") {
         const total = calculateProjectTotal(project);
         switch (budgetFilter) {
-          case "small":
-            if (total >= 5000) return false;
+          case "lt25":
+            if (total >= 25000) return false;
             break;
-          case "medium":
-            if (total < 5000 || total >= 15000) return false;
+          case "25_50":
+            if (total < 25000 || total >= 50000) return false;
             break;
-          case "large":
-            if (total < 15000) return false;
+          case "50_80":
+            if (total < 50000 || total >= 80000) return false;
+            break;
+          case "80_120":
+            if (total < 80000 || total >= 120000) return false;
+            break;
+          case "120_150":
+            if (total < 120000 || total >= 150000) return false;
+            break;
+          case "gt150":
+            if (total < 150000) return false;
             break;
         }
       }
@@ -257,9 +266,12 @@ export default function Proyectos() {
                   </SelectTrigger>
                   <SelectContent className="bg-background">
                     <SelectItem value="all">Cualquier importe</SelectItem>
-                    <SelectItem value="small">&lt; 5.000 €</SelectItem>
-                    <SelectItem value="medium">5.000 - 15.000 €</SelectItem>
-                    <SelectItem value="large">&gt; 15.000 €</SelectItem>
+                    <SelectItem value="lt25">&lt; 25.000 €</SelectItem>
+                    <SelectItem value="25_50">25.000 - 50.000 €</SelectItem>
+                    <SelectItem value="50_80">50.000 - 80.000 €</SelectItem>
+                    <SelectItem value="80_120">80.000 - 120.000 €</SelectItem>
+                    <SelectItem value="120_150">120.000 - 150.000 €</SelectItem>
+                    <SelectItem value="gt150">&gt; 150.000 €</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
