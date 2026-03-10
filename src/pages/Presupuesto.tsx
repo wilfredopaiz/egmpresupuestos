@@ -13,20 +13,12 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   calculateProjectTotal,
   calculateProjectTotalBySection,
   formatCurrency,
   calculateItemTotal,
 } from "@/lib/calculations";
 import { PROJECT_STATUSES } from "@/lib/constants";
-import type { ProjectStatus } from "@/types";
 import { useProject, useUpdateProject } from "@/hooks/useProjects";
 import { Calculator, FileText, Share2, ArrowLeft, ChevronDown, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -45,7 +37,6 @@ export default function Presupuesto() {
   const [marginInput, setMarginInput] = useState<string | null>(null);
   const [ivaInput, setIvaInput] = useState<string | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const [isEditingHeader, setIsEditingHeader] = useState(false);
 
   if (isLoading) {
     return (
@@ -110,52 +101,14 @@ export default function Presupuesto() {
             </Badge>
           </div>
           <div className="flex gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => setIsEditingHeader(!isEditingHeader)} className="gap-1">
+            <Button variant="action" size="sm" asChild className="gap-1">
+              <Link to={`/proyecto/${project.id}`}>
               <Pencil className="h-4 w-4" />
               <span className="hidden sm:inline">Editar</span>
-            </Button>
-            <Button variant="action" size="sm" asChild>
-              <Link to={`/proyecto/${project.id}`}>Editar partidas</Link>
+              </Link>
             </Button>
           </div>
         </div>
-
-        {isEditingHeader && (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="p-4 space-y-3">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Estado del presupuesto</Label>
-                <Select
-                  value={project.status}
-                  onValueChange={(value: ProjectStatus) => {
-                    updateProject.mutate({
-                      id: project.id,
-                      updates: { status: value },
-                    });
-                    toast({
-                      title: "Estado actualizado",
-                      description: `El estado se ha cambiado a "${PROJECT_STATUSES[value].label}"`,
-                    });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background">
-                    {Object.entries(PROJECT_STATUSES).map(([key, { label }]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setIsEditingHeader(false)} className="w-full">
-                Cerrar
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
         <Card>
           <CardHeader className="pb-3">

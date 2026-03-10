@@ -7,9 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AddItemModal } from "@/components/partidas/AddItemModal";
 import { calculateItemTotal, formatCurrency } from "@/lib/calculations";
 import { PROJECT_STATUSES } from "@/lib/constants";
+import type { ProjectStatus } from "@/types";
 import {
   useProject,
   useAddProjectItem,
@@ -147,6 +155,34 @@ export default function ProyectoDetalle() {
                 <p className="text-body text-muted-foreground">{project.client?.name ?? project.client_name ?? "Sin cliente"}</p>
               </div>
               <Badge className={`${status.color} text-small shrink-0 self-start`}>{status.label}</Badge>
+            </div>
+
+            <div className="mb-4 p-4 rounded-xl bg-white shadow-sm border border-border space-y-2">
+              <Label className="text-body font-medium">Estado del proyecto</Label>
+              <Select
+                value={project.status}
+                onValueChange={(value: ProjectStatus) => {
+                  updateProject.mutate({
+                    id: project.id,
+                    updates: { status: value },
+                  });
+                  toast({
+                    title: "Estado actualizado",
+                    description: `El estado se ha cambiado a "${PROJECT_STATUSES[value].label}"`,
+                  });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  {Object.entries(PROJECT_STATUSES).map(([key, { label }]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {project.notes && <p className="text-body text-muted-foreground mb-4 break-words">{project.notes}</p>}
