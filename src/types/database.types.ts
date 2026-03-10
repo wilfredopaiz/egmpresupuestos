@@ -188,6 +188,9 @@ export type Database = {
           client_name: string | null;
           created_at: string;
           id: string;
+          include_iva: boolean;
+          iva_percentage: number;
+          margin_percentage: number;
           name: string;
           notes: string | null;
           status: Database["public"]["Enums"]["project_status"];
@@ -199,6 +202,9 @@ export type Database = {
           client_name?: string | null;
           created_at?: string;
           id?: string;
+          include_iva?: boolean;
+          iva_percentage?: number;
+          margin_percentage?: number;
           name: string;
           notes?: string | null;
           status?: Database["public"]["Enums"]["project_status"];
@@ -210,6 +216,9 @@ export type Database = {
           client_name?: string | null;
           created_at?: string;
           id?: string;
+          include_iva?: boolean;
+          iva_percentage?: number;
+          margin_percentage?: number;
           name?: string;
           notes?: string | null;
           status?: Database["public"]["Enums"]["project_status"];

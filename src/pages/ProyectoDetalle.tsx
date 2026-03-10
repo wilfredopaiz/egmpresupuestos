@@ -15,6 +15,7 @@ import {
   useAddProjectItem,
   useUpdateProjectItem,
   useRemoveProjectItem,
+  useUpdateProject,
 } from "@/hooks/useProjects";
 import { Plus, Calculator, ArrowLeft, Trash2, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -25,11 +26,12 @@ export default function ProyectoDetalle() {
   const addItem = useAddProjectItem();
   const updateItem = useUpdateProjectItem();
   const removeItem = useRemoveProjectItem();
+  const updateProject = useUpdateProject();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
-  const [includeIVA, setIncludeIVA] = useState(true);
-  const [margin, setMargin] = useState(15);
+  const [marginInput, setMarginInput] = useState<string | null>(null);
+  const [ivaInput, setIvaInput] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -57,9 +59,12 @@ export default function ProyectoDetalle() {
 
   const currentItems = project.items || [];
   const subtotal = currentItems.reduce((sum: number, item: any) => sum + calculateItemTotal(item), 0);
-  const marginAmount = subtotal * ((margin || 0) / 100);
+  const marginPercentage = project.margin_percentage ?? 15;
+  const ivaPercentage = project.iva_percentage ?? 21;
+  const includeIVA = project.include_iva ?? true;
+  const marginAmount = subtotal * (marginPercentage / 100);
   const subtotalWithMargin = subtotal + marginAmount;
-  const ivaAmount = includeIVA ? subtotalWithMargin * 0.21 : 0;
+  const ivaAmount = includeIVA ? subtotalWithMargin * (ivaPercentage / 100) : 0;
   const total = subtotalWithMargin + ivaAmount;
   const status = PROJECT_STATUSES[project.status];
 
@@ -246,10 +251,48 @@ export default function ProyectoDetalle() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white shadow-sm border border-border">
                 <Label htmlFor="iva" className="text-body font-medium cursor-pointer">
-                  Incluir IVA (21%)
+                  Incluir IVA ({ivaPercentage}%)
                 </Label>
-                <Switch id="iva" checked={includeIVA} onCheckedChange={setIncludeIVA} className="scale-110" />
+                <Switch
+                  id="iva"
+                  checked={includeIVA}
+                  onCheckedChange={(checked) => {
+                    updateProject.mutate({
+                      id: project.id,
+                      updates: { include_iva: checked },
+                    });
+                  }}
+                  className="scale-110"
+                />
               </div>
+
+              {includeIVA && (
+                <div className="p-4 rounded-xl bg-white shadow-sm border border-border space-y-2">
+                  <Label htmlFor="iva-percentage" className="text-body font-medium">
+                    IVA (%)
+                  </Label>
+                  <Input
+                    id="iva-percentage"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    max="100"
+                    step={0.5}
+                    value={ivaInput ?? String(ivaPercentage)}
+                    onChange={(e) => setIvaInput(e.target.value)}
+                    onBlur={() => {
+                      const parsed = parseFloat(ivaInput ?? String(ivaPercentage));
+                      const nextValue = Number.isNaN(parsed) ? ivaPercentage : parsed;
+                      updateProject.mutate({
+                        id: project.id,
+                        updates: { iva_percentage: nextValue },
+                      });
+                      setIvaInput(null);
+                    }}
+                    className="text-center text-heading font-semibold"
+                  />
+                </div>
+              )}
 
               <div className="p-4 rounded-xl bg-white shadow-sm border border-border space-y-2">
                 <Label htmlFor="margin" className="text-body font-medium">
@@ -262,10 +305,18 @@ export default function ProyectoDetalle() {
                   min="0"
                   max="100"
                   step={0.5}
-                  value={margin}
+                  value={marginInput ?? String(marginPercentage)}
                   onChange={(e) => {
-                    const next = parseFloat(e.target.value);
-                    setMargin(Number.isNaN(next) ? 0 : next);
+                    setMarginInput(e.target.value);
+                  }}
+                  onBlur={() => {
+                    const parsed = parseFloat(marginInput ?? String(marginPercentage));
+                    const nextValue = Number.isNaN(parsed) ? marginPercentage : parsed;
+                    updateProject.mutate({
+                      id: project.id,
+                      updates: { margin_percentage: nextValue },
+                    });
+                    setMarginInput(null);
                   }}
                   className="text-center text-heading font-semibold"
                 />
@@ -282,14 +333,14 @@ export default function ProyectoDetalle() {
 
               {marginAmount > 0 && (
                 <div className="flex items-center justify-between text-body">
-                  <span>Margen ({margin || 0}%)</span>
+                  <span>Margen ({marginPercentage}%)</span>
                   <span>+ {formatCurrency(marginAmount)}</span>
                 </div>
               )}
 
               {includeIVA && (
                 <div className="flex items-center justify-between text-body">
-                  <span>IVA (21%)</span>
+                  <span>IVA ({ivaPercentage}%)</span>
                   <span>+ {formatCurrency(ivaAmount)}</span>
                 </div>
               )}

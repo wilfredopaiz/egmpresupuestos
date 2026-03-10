@@ -42,8 +42,8 @@ export default function Presupuesto() {
   const updateProject = useUpdateProject();
   const { data: sections = [] } = useSections();
 
-  const [includeIVA, setIncludeIVA] = useState(true);
-  const [margin, setMargin] = useState("15");
+  const [marginInput, setMarginInput] = useState<string | null>(null);
+  const [ivaInput, setIvaInput] = useState<string | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [isEditingHeader, setIsEditingHeader] = useState(false);
 
@@ -70,9 +70,12 @@ export default function Presupuesto() {
   }
 
   const subtotal = calculateProjectTotal(project);
-  const marginAmount = (subtotal * (parseFloat(margin) || 0)) / 100;
+  const marginPercentage = project.margin_percentage ?? 15;
+  const ivaPercentage = project.iva_percentage ?? 21;
+  const includeIVA = project.include_iva ?? true;
+  const marginAmount = (subtotal * marginPercentage) / 100;
   const subtotalWithMargin = subtotal + marginAmount;
-  const ivaAmount = includeIVA ? subtotalWithMargin * 0.21 : 0;
+  const ivaAmount = includeIVA ? (subtotalWithMargin * ivaPercentage) / 100 : 0;
   const total = subtotalWithMargin + ivaAmount;
   const totalsBySection = calculateProjectTotalBySection(project);
 
@@ -245,10 +248,47 @@ export default function Presupuesto() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/50">
                 <Label htmlFor="iva" className="text-body font-medium cursor-pointer">
-                  Incluir IVA (21%)
+                  Incluir IVA ({ivaPercentage}%)
                 </Label>
-                <Switch id="iva" checked={includeIVA} onCheckedChange={setIncludeIVA} />
+                <Switch
+                  id="iva"
+                  checked={includeIVA}
+                  onCheckedChange={(checked) => {
+                    updateProject.mutate({
+                      id: project.id,
+                      updates: { include_iva: checked },
+                    });
+                  }}
+                />
               </div>
+
+              {includeIVA && (
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <Label htmlFor="iva-percentage" className="text-body font-medium mb-2 block">
+                    IVA (%)
+                  </Label>
+                  <Input
+                    id="iva-percentage"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    value={ivaInput ?? String(ivaPercentage)}
+                    onChange={(e) => setIvaInput(e.target.value)}
+                    onBlur={() => {
+                      const parsed = parseFloat(ivaInput ?? String(ivaPercentage));
+                      const nextValue = Number.isNaN(parsed) ? ivaPercentage : parsed;
+                      updateProject.mutate({
+                        id: project.id,
+                        updates: { iva_percentage: nextValue },
+                      });
+                      setIvaInput(null);
+                    }}
+                    className="text-center text-heading font-bold"
+                  />
+                </div>
+              )}
 
               <div className="p-4 rounded-lg bg-muted/50">
                 <Label htmlFor="margin" className="text-body font-medium mb-2 block">
@@ -261,8 +301,17 @@ export default function Presupuesto() {
                   min="0"
                   max="100"
                   step="0.5"
-                  value={margin}
-                  onChange={(e) => setMargin(e.target.value)}
+                  value={marginInput ?? String(marginPercentage)}
+                  onChange={(e) => setMarginInput(e.target.value)}
+                  onBlur={() => {
+                    const parsed = parseFloat(marginInput ?? String(marginPercentage));
+                    const nextValue = Number.isNaN(parsed) ? marginPercentage : parsed;
+                    updateProject.mutate({
+                      id: project.id,
+                      updates: { margin_percentage: nextValue },
+                    });
+                    setMarginInput(null);
+                  }}
                   className="text-center text-heading font-bold"
                 />
               </div>
@@ -278,16 +327,16 @@ export default function Presupuesto() {
                 <span>{formatCurrency(subtotal)}</span>
               </div>
 
-              {parseFloat(margin) > 0 && (
+              {marginPercentage > 0 && (
                 <div className="flex justify-between text-body">
-                  <span>Margen ({margin}%)</span>
+                  <span>Margen ({marginPercentage}%)</span>
                   <span>+ {formatCurrency(marginAmount)}</span>
                 </div>
               )}
 
               {includeIVA && (
                 <div className="flex justify-between text-body">
-                  <span>IVA (21%)</span>
+                  <span>IVA ({ivaPercentage}%)</span>
                   <span>+ {formatCurrency(ivaAmount)}</span>
                 </div>
               )}
@@ -323,16 +372,16 @@ export default function Presupuesto() {
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
 
-                  {parseFloat(margin) > 0 && (
+                  {marginPercentage > 0 && (
                     <div className="flex justify-between text-body">
-                      <span>Margen ({margin}%)</span>
+                      <span>Margen ({marginPercentage}%)</span>
                       <span>+ {formatCurrency(marginAmount)}</span>
                     </div>
                   )}
 
                   {includeIVA && (
                     <div className="flex justify-between text-body">
-                      <span>IVA (21%)</span>
+                      <span>IVA ({ivaPercentage}%)</span>
                       <span>+ {formatCurrency(ivaAmount)}</span>
                     </div>
                   )}

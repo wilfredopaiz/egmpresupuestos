@@ -54,6 +54,9 @@ export async function createProject(project: ProjectInsert) {
       ...project,
       user_id: userId,
       status: "en-medicion",
+      include_iva: project.include_iva ?? true,
+      iva_percentage: project.iva_percentage ?? 21,
+      margin_percentage: project.margin_percentage ?? 15,
     })
     .select()
     .single();

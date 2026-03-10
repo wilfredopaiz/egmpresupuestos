@@ -33,6 +33,25 @@ export function calculateProjectTotal(project: ProjectLike): number {
   return items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
 }
 
+export function calculateProjectWithAdjustments(params: {
+  subtotal: number;
+  includeIva: boolean;
+  ivaPercentage: number;
+  marginPercentage: number;
+}) {
+  const marginAmount = params.subtotal * (params.marginPercentage / 100);
+  const subtotalWithMargin = params.subtotal + marginAmount;
+  const ivaAmount = params.includeIva ? subtotalWithMargin * (params.ivaPercentage / 100) : 0;
+  const total = subtotalWithMargin + ivaAmount;
+
+  return {
+    marginAmount,
+    subtotalWithMargin,
+    ivaAmount,
+    total,
+  };
+}
+
 export function calculateProjectTotalBySection(project: ProjectLike): Record<string, number> {
   const totals: Record<string, number> = {};
   const items = project.items ?? [];
