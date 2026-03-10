@@ -265,7 +265,7 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
               <Switch id="installation" checked={includeInstallation} onCheckedChange={setIncludeInstallation} />
             </div>
 
-            {selectedTemplate?.price_supply && (
+            {selectedTemplate?.price_supply !== null && (
               <div className="flex items-center justify-between gap-4">
                 <Label className="text-body font-medium cursor-pointer" htmlFor="supply">
                   Suministro

@@ -218,12 +218,12 @@ export default function Presupuesto() {
                     </span>
                     {item.include_installation && (
                       <span>
-                        Inst: {formatCurrency(template.price_installation)}/{template.unit}
+                        Inst: {formatCurrency(item.price_installation)}/{template.unit}
                       </span>
                     )}
-                    {item.include_supply && template.price_supply && (
+                    {item.include_supply && item.price_supply && (
                       <span>
-                        Sum: {formatCurrency(template.price_supply)}/{template.unit}
+                        Sum: {formatCurrency(item.price_supply)}/{template.unit}
                       </span>
                     )}
                   </div>

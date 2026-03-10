@@ -133,6 +133,8 @@ export type Database = {
           include_supply: boolean;
           notes: string | null;
           option_enabled: boolean | null;
+          price_installation: number;
+          price_supply: number | null;
           project_id: string;
           quantity: number;
           sort_order: number | null;
@@ -146,6 +148,8 @@ export type Database = {
           include_supply?: boolean;
           notes?: string | null;
           option_enabled?: boolean | null;
+          price_installation: number;
+          price_supply?: number | null;
           project_id: string;
           quantity?: number;
           sort_order?: number | null;
@@ -159,6 +163,8 @@ export type Database = {
           include_supply?: boolean;
           notes?: string | null;
           option_enabled?: boolean | null;
+          price_installation?: number;
+          price_supply?: number | null;
           project_id?: string;
           quantity?: number;
           sort_order?: number | null;

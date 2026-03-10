@@ -75,6 +75,8 @@ export default function ProyectoDetalle() {
     includeSupply: boolean;
     optionEnabled: boolean;
     notes: string;
+    customPriceInstallation?: number;
+    customPriceSupply?: number;
   }) => {
     if (editingItem) {
       updateItem.mutate(
@@ -87,6 +89,8 @@ export default function ProyectoDetalle() {
             include_supply: data.includeSupply,
             option_enabled: data.optionEnabled,
             notes: data.notes || null,
+            price_installation: data.customPriceInstallation ?? editingItem.price_installation,
+            price_supply: data.customPriceSupply ?? editingItem.price_supply,
           },
         },
         {
@@ -106,6 +110,8 @@ export default function ProyectoDetalle() {
       include_supply: data.includeSupply,
       option_enabled: data.optionEnabled,
       notes: data.notes || null,
+      price_installation: data.customPriceInstallation ?? 0,
+      price_supply: data.customPriceSupply ?? null,
     });
   };
 
@@ -217,12 +223,12 @@ export default function ProyectoDetalle() {
                       </span>
                       {item.include_installation && (
                         <span>
-                          Inst: {formatCurrency(template.price_installation)}/{template.unit}
+                          Inst: {formatCurrency(item.price_installation)}/{template.unit}
                         </span>
                       )}
-                      {item.include_supply && template.price_supply && (
+                      {item.include_supply && item.price_supply && (
                         <span>
-                          Sum: {formatCurrency(template.price_supply)}/{template.unit}
+                          Sum: {formatCurrency(item.price_supply)}/{template.unit}
                         </span>
                       )}
                     </div>
@@ -376,6 +382,8 @@ export default function ProyectoDetalle() {
                 includeSupply: editingItem.include_supply,
                 optionEnabled: editingItem.option_enabled,
                 notes: editingItem.notes,
+                customPriceInstallation: editingItem.price_installation,
+                customPriceSupply: editingItem.price_supply,
               }
             : undefined
         }

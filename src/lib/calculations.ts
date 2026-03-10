@@ -8,7 +8,9 @@ type ProjectItemLike = {
   quantity: number;
   include_installation: boolean;
   include_supply: boolean;
-  template: TemplateLike | null;
+  price_installation: number;
+  price_supply: number | null;
+  template?: TemplateLike | null;
 };
 
 type ProjectLike = {
@@ -16,14 +18,12 @@ type ProjectLike = {
 };
 
 export function calculateItemTotal(item: ProjectItemLike): number {
-  if (!item.template) return 0;
-
   let total = 0;
   if (item.include_installation) {
-    total += item.template.price_installation * item.quantity;
+    total += item.price_installation * item.quantity;
   }
-  if (item.include_supply && item.template.price_supply) {
-    total += item.template.price_supply * item.quantity;
+  if (item.include_supply && item.price_supply) {
+    total += item.price_supply * item.quantity;
   }
   return total;
 }

@@ -5,9 +5,27 @@ export type ProjectItemInsert = Omit<TablesInsert<"project_items">, "id" | "crea
 export type ProjectItemUpdate = Omit<TablesUpdate<"project_items">, "id" | "created_at" | "updated_at">;
 
 export async function addItemToProject(item: ProjectItemInsert) {
+  let payload = item;
+
+  if (payload.price_installation === undefined || payload.price_installation === null) {
+    const { data: template, error: templateError } = await supabase
+      .from("item_templates")
+      .select("price_installation, price_supply")
+      .eq("id", payload.template_id)
+      .single();
+
+    if (templateError) throw templateError;
+
+    payload = {
+      ...payload,
+      price_installation: template.price_installation,
+      price_supply: payload.price_supply ?? template.price_supply,
+    };
+  }
+
   const { data, error } = await supabase
     .from("project_items")
-    .insert(item)
+    .insert(payload)
     .select(
       `
       *,
