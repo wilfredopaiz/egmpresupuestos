@@ -1,5 +1,7 @@
 import { useLocation, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { NavLink } from "@/components/NavLink";
+import { Button } from "@/components/ui/button";
 import {
   FolderKanban,
   PlusCircle,
@@ -7,10 +9,12 @@ import {
   Settings,
   HardHat,
   LayoutDashboard,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -31,6 +35,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const collapsed = state === "collapsed";
+  const { user, signOut } = useAuth();
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
@@ -86,6 +91,21 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="px-2 pb-3">
+        {!collapsed && user?.email && (
+          <p className="px-3 text-xs text-sidebar-foreground/70 truncate">{user.email}</p>
+        )}
+        <Button
+          type="button"
+          variant="ghost"
+          className="justify-start gap-2"
+          onClick={() => void signOut()}
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>Cerrar sesion</span>}
+        </Button>
+      </SidebarFooter>
     </Sidebar>
   );
 }
