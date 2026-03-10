@@ -1,11 +1,8 @@
 import { useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  formatCurrency,
-  projectStatuses,
-  calculateProjectTotal,
-} from "@/data/mockData";
+import { formatCurrency, calculateProjectTotal } from "@/lib/calculations";
+import { projectStatuses } from "@/data/mockData";
 import { useProjects } from "@/hooks/useProjects";
 import {
   TrendingUp,
@@ -19,7 +16,23 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
-  const { projects } = useProjects();
+  const { projects, isLoading, error } = useProjects();
+
+  if (isLoading) {
+    return (
+      <AppLayout title="Dashboard">
+        <p className="text-muted-foreground">Cargando dashboard...</p>
+      </AppLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppLayout title="Dashboard">
+        <p className="text-destructive">No se pudieron cargar los datos.</p>
+      </AppLayout>
+    );
+  }
   
   // Valores calculados desde proyectos reales
   const stats = useMemo(() => {
@@ -28,10 +41,10 @@ export default function Dashboard() {
     const currentMonth = now.getMonth();
     
     const projectsThisYear = projects.filter(
-      (p) => p.createdAt.getFullYear() === currentYear
+      (p) => new Date(p.created_at).getFullYear() === currentYear
     );
     const projectsThisMonth = projectsThisYear.filter(
-      (p) => p.createdAt.getMonth() === currentMonth
+      (p) => new Date(p.created_at).getMonth() === currentMonth
     );
     
     const budgetThisYear = projectsThisYear.reduce(
@@ -60,7 +73,7 @@ export default function Dashboard() {
     
     return {
       totalProjects: projects.length,
-      totalClients: [...new Set(projects.map((p) => p.client))].length,
+      totalClients: [...new Set(projects.map((p) => p.client?.name ?? p.client_name).filter(Boolean))].length,
       budgetThisYear,
       budgetThisMonth,
       avgBudgetThisYear,

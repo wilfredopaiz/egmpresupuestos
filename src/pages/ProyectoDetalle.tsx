@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,41 +8,42 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { AddItemModal } from "@/components/partidas/AddItemModal";
+import { calculateItemTotal, formatCurrency } from "@/lib/calculations";
+import { projectStatuses } from "@/data/mockData";
 import {
-  getTemplateById,
-  getSectionById,
-  calculateItemTotal,
-  formatCurrency,
-  projectStatuses,
-  ProjectItem,
-} from "@/data/mockData";
-import { useProject, useProjectActions } from "@/hooks/useProjects";
+  useProject,
+  useAddProjectItem,
+  useUpdateProjectItem,
+  useRemoveProjectItem,
+} from "@/hooks/useProjects";
 import { Plus, Calculator, ArrowLeft, Trash2, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function ProyectoDetalle() {
   const { id } = useParams();
-  const { project } = useProject(id || null);
-  const { updateProject } = useProjectActions();
+  const { project, isLoading, error } = useProject(id || null);
+  const addItem = useAddProjectItem();
+  const updateItem = useUpdateProjectItem();
+  const removeItem = useRemoveProjectItem();
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<ProjectItem | null>(null);
+  const [editingItem, setEditingItem] = useState<any | null>(null);
   const [includeIVA, setIncludeIVA] = useState(true);
   const [margin, setMargin] = useState(15);
 
-  const currentItems = project?.items || [];
-  const subtotal = currentItems.reduce((sum, item) => sum + calculateItemTotal(item), 0);
-  const marginAmount = subtotal * ((margin || 0) / 100);
-  const subtotalWithMargin = subtotal + marginAmount;
-  const ivaAmount = includeIVA ? subtotalWithMargin * 0.21 : 0;
-  const total = subtotalWithMargin + ivaAmount;
+  if (isLoading) {
+    return (
+      <AppLayout title="Proyecto">
+        <p className="text-muted-foreground">Cargando proyecto...</p>
+      </AppLayout>
+    );
+  }
 
-  if (!project) {
+  if (error || !project) {
     return (
       <AppLayout title="Proyecto no encontrado">
         <div className="text-center py-16 px-4">
-          <p className="text-body text-muted-foreground mb-6">
-            El proyecto que buscas no existe
-          </p>
+          <p className="text-body text-muted-foreground mb-6">El proyecto que buscas no existe</p>
           <Button variant="action" asChild>
             <Link to="/proyectos">
               <ArrowLeft className="h-5 w-5" />
@@ -54,6 +55,12 @@ export default function ProyectoDetalle() {
     );
   }
 
+  const currentItems = project.items || [];
+  const subtotal = currentItems.reduce((sum: number, item: any) => sum + calculateItemTotal(item), 0);
+  const marginAmount = subtotal * ((margin || 0) / 100);
+  const subtotalWithMargin = subtotal + marginAmount;
+  const ivaAmount = includeIVA ? subtotalWithMargin * 0.21 : 0;
+  const total = subtotalWithMargin + ivaAmount;
   const status = projectStatuses[project.status];
 
   const handleAddItem = (data: {
@@ -63,42 +70,41 @@ export default function ProyectoDetalle() {
     includeSupply: boolean;
     optionEnabled: boolean;
     notes: string;
-    customPriceInstallation?: number;
-    customPriceSupply?: number;
   }) => {
     if (editingItem) {
-      // Update existing item
-      const updatedItems = currentItems.map((item) =>
-        item.id === editingItem.id
-          ? {
-              ...item,
-              templateId: data.templateId,
-              quantity: data.quantity,
-              includeInstallation: data.includeInstallation,
-              includeSupply: data.includeSupply,
-              optionEnabled: data.optionEnabled,
-              notes: data.notes,
-            }
-          : item
+      updateItem.mutate(
+        {
+          id: editingItem.id,
+          updates: {
+            template_id: data.templateId,
+            quantity: data.quantity,
+            include_installation: data.includeInstallation,
+            include_supply: data.includeSupply,
+            option_enabled: data.optionEnabled,
+            notes: data.notes || null,
+          },
+        },
+        {
+          onSuccess: () => {
+            setEditingItem(null);
+          },
+        },
       );
-      updateProject(project.id, { items: updatedItems });
-      setEditingItem(null);
-    } else {
-      // Add new item
-      const newItem: ProjectItem = {
-        id: `item-${Date.now()}`,
-        templateId: data.templateId,
-        quantity: data.quantity,
-        includeInstallation: data.includeInstallation,
-        includeSupply: data.includeSupply,
-        optionEnabled: data.optionEnabled,
-        notes: data.notes,
-      };
-      updateProject(project.id, { items: [...currentItems, newItem] });
+      return;
     }
+
+    addItem.mutate({
+      project_id: project.id,
+      template_id: data.templateId,
+      quantity: data.quantity,
+      include_installation: data.includeInstallation,
+      include_supply: data.includeSupply,
+      option_enabled: data.optionEnabled,
+      notes: data.notes || null,
+    });
   };
 
-  const handleEditItem = (item: ProjectItem) => {
+  const handleEditItem = (item: any) => {
     setEditingItem(item);
     setIsAddModalOpen(true);
   };
@@ -109,42 +115,35 @@ export default function ProyectoDetalle() {
   };
 
   const handleDeleteItem = (itemId: string) => {
-    const updatedItems = currentItems.filter((item) => item.id !== itemId);
-    updateProject(project.id, { items: updatedItems });
-    toast({
-      title: "Partida eliminada",
-      description: "La partida se ha eliminado del proyecto",
+    removeItem.mutate(itemId, {
+      onSuccess: () => {
+        toast({
+          title: "Partida eliminada",
+          description: "La partida se ha eliminado del proyecto",
+        });
+      },
     });
   };
 
   return (
     <AppLayout title={project.name}>
       <div className="flex flex-col gap-6 overflow-hidden">
-        {/* Cabecera del proyecto */}
         <Card className="flex-shrink-0">
           <CardContent className="p-5">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
               <div className="min-w-0 flex-1">
                 <h2 className="text-heading font-bold break-words">{project.name}</h2>
-                <p className="text-body text-muted-foreground">{project.client}</p>
+                <p className="text-body text-muted-foreground">{project.client?.name ?? project.client_name ?? "Sin cliente"}</p>
               </div>
-              <Badge className={`${status.color} text-small shrink-0 self-start`}>
-                {status.label}
-              </Badge>
+              <Badge className={`${status.color} text-small shrink-0 self-start`}>{status.label}</Badge>
             </div>
 
-            {project.notes && (
-              <p className="text-body text-muted-foreground mb-4 break-words">
-                {project.notes}
-              </p>
-            )}
+            {project.notes && <p className="text-body text-muted-foreground mb-4 break-words">{project.notes}</p>}
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t gap-4">
               <div className="min-w-0">
                 <p className="text-small text-muted-foreground">Total estimado</p>
-                <p className="text-heading font-bold text-primary">
-                  {formatCurrency(total)}
-                </p>
+                <p className="text-heading font-bold text-primary">{formatCurrency(total)}</p>
               </div>
               <Button variant="action" asChild size="sm" className="shrink-0 w-full sm:w-auto">
                 <Link to={`/presupuesto?proyecto=${project.id}`}>
@@ -156,61 +155,44 @@ export default function ProyectoDetalle() {
           </CardContent>
         </Card>
 
-        {/* Lista de partidas */}
         <Card className="flex-shrink-0">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-3">
-              <CardTitle className="text-base">
-                Partidas ({currentItems.length})
-              </CardTitle>
+              <CardTitle className="text-base">Partidas ({currentItems.length})</CardTitle>
               <Button variant="action" size="sm" onClick={() => setIsAddModalOpen(true)} className="shrink-0">
                 <Plus className="h-4 w-4" />
-                Añadir
+                Anadir
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             {currentItems.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-body text-muted-foreground mb-4">
-                  Sin partidas todavía
-                </p>
+                <p className="text-body text-muted-foreground mb-4">Sin partidas todavia</p>
                 <Button variant="outline" onClick={() => setIsAddModalOpen(true)}>
                   <Plus className="h-5 w-5" />
-                  Añadir primera partida
+                  Anadir primera partida
                 </Button>
               </div>
             ) : (
-              currentItems.map((item) => {
-                const template = getTemplateById(item.templateId);
+              currentItems.map((item: any) => {
+                const template = item.template;
                 if (!template) return null;
-                const section = getSectionById(template.sectionId);
+                const section = template.section;
                 const itemTotal = calculateItemTotal(item);
 
                 return (
-                  <div
-                    key={item.id}
-                    className="p-4 rounded-xl bg-muted/50 space-y-2"
-                  >
+                  <div key={item.id} className="p-4 rounded-xl bg-muted/50 space-y-2">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-small text-muted-foreground">
                           {section?.icon} {section?.name}
                         </p>
-                        <p className="text-body-lg font-semibold break-words">
-                          {template.name}
-                        </p>
+                        <p className="text-body-lg font-semibold break-words">{template.name}</p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0 self-end sm:self-start">
-                        <span className="text-body-lg font-bold mr-2">
-                          {formatCurrency(itemTotal)}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => handleEditItem(item)}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
+                        <span className="text-body-lg font-bold mr-2">{formatCurrency(itemTotal)}</span>
+                        <Button variant="ghost" size="icon-sm" onClick={() => handleEditItem(item)} className="text-muted-foreground hover:text-foreground">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
@@ -224,46 +206,31 @@ export default function ProyectoDetalle() {
                       </div>
                     </div>
 
-                    {/* Prices breakdown */}
                     <div className="flex flex-wrap gap-2 text-small text-muted-foreground">
                       <span>
                         {item.quantity.toLocaleString("es-ES")} {template.unit}
                       </span>
-                      {item.includeInstallation && (
+                      {item.include_installation && (
                         <span>
-                          • Inst: {formatCurrency(template.priceInstallation)}/{template.unit}
+                          Inst: {formatCurrency(template.price_installation)}/{template.unit}
                         </span>
                       )}
-                      {item.includeSupply && template.priceSupply && (
+                      {item.include_supply && template.price_supply && (
                         <span>
-                          • Sum: {formatCurrency(template.priceSupply)}/{template.unit}
+                          Sum: {formatCurrency(template.price_supply)}/{template.unit}
                         </span>
                       )}
                     </div>
 
                     <div className="flex flex-wrap gap-2 text-small">
-                      {item.includeInstallation && (
-                        <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">
-                          Instalación
-                        </span>
-                      )}
-                      {item.includeSupply && (
-                        <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">
-                          Suministro
-                        </span>
-                      )}
-                      {item.optionEnabled && template.optionLabel && (
-                        <span className="px-2 py-1 rounded-md bg-accent text-accent-foreground">
-                          {template.optionLabel}
-                        </span>
+                      {item.include_installation && <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">Instalacion</span>}
+                      {item.include_supply && <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">Suministro</span>}
+                      {item.option_enabled && template.option_label && (
+                        <span className="px-2 py-1 rounded-md bg-accent text-accent-foreground">{template.option_label}</span>
                       )}
                     </div>
 
-                    {item.notes && (
-                      <p className="text-small text-muted-foreground italic pt-1 break-words">
-                        "{item.notes}"
-                      </p>
-                    )}
+                    {item.notes && <p className="text-small text-muted-foreground italic pt-1 break-words">"{item.notes}"</p>}
                   </div>
                 );
               })
@@ -271,8 +238,6 @@ export default function ProyectoDetalle() {
           </CardContent>
         </Card>
 
-        {/* Botón fijo inferior en móvil */}
-        {/* Ajustes y resumen del presupuesto */}
         <div className="flex flex-col gap-4">
           <Card className="bg-white border border-border shadow-md">
             <CardHeader className="pb-2">
@@ -283,12 +248,7 @@ export default function ProyectoDetalle() {
                 <Label htmlFor="iva" className="text-body font-medium cursor-pointer">
                   Incluir IVA (21%)
                 </Label>
-                <Switch
-                  id="iva"
-                  checked={includeIVA}
-                  onCheckedChange={setIncludeIVA}
-                  className="scale-110"
-                />
+                <Switch id="iva" checked={includeIVA} onCheckedChange={setIncludeIVA} className="scale-110" />
               </div>
 
               <div className="p-4 rounded-xl bg-white shadow-sm border border-border space-y-2">
@@ -342,20 +302,13 @@ export default function ProyectoDetalle() {
           </Card>
         </div>
 
-        {/* Boton fijo inferior en movil */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur border-t md:hidden z-50">
-          <Button
-            variant="action"
-            size="xl"
-            className="w-full"
-            onClick={() => setIsAddModalOpen(true)}
-          >
+          <Button variant="action" size="xl" className="w-full" onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-5 w-5" />
-            Añadir partida
+            Anadir partida
           </Button>
         </div>
 
-        {/* Spacer for fixed button on mobile */}
         <div className="h-20 md:hidden flex-shrink-0" />
       </div>
 
@@ -366,11 +319,11 @@ export default function ProyectoDetalle() {
         editData={
           editingItem
             ? {
-                templateId: editingItem.templateId,
+                templateId: editingItem.template_id,
                 quantity: editingItem.quantity,
-                includeInstallation: editingItem.includeInstallation,
-                includeSupply: editingItem.includeSupply,
-                optionEnabled: editingItem.optionEnabled,
+                includeInstallation: editingItem.include_installation,
+                includeSupply: editingItem.include_supply,
+                optionEnabled: editingItem.option_enabled,
                 notes: editingItem.notes,
               }
             : undefined

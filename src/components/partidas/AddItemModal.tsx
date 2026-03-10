@@ -17,14 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import {
-  sections,
-  getTemplatesBySection,
-  getTemplateById,
-  formatCurrency,
-} from "@/data/mockData";
 import { Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useSections, useTemplates, useTemplatesBySection } from "@/hooks/useSections";
+import { formatCurrency } from "@/lib/calculations";
 
 interface AddItemModalProps {
   open: boolean;
@@ -62,15 +58,16 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
   const [priceInstallation, setPriceInstallation] = useState("");
   const [priceSupply, setPriceSupply] = useState("");
 
-  const templates = sectionId ? getTemplatesBySection(sectionId) : [];
-  const selectedTemplate = templateId ? getTemplateById(templateId) : null;
+  const { data: sections = [] } = useSections();
+  const { data: allTemplates = [] } = useTemplates();
+  const { data: templates = [] } = useTemplatesBySection(sectionId || null);
+  const selectedTemplate = templateId ? allTemplates.find((t: any) => t.id === templateId) : null;
 
-  // Pre-populate form when editing
   useEffect(() => {
     if (editData && open) {
-      const template = getTemplateById(editData.templateId);
+      const template = allTemplates.find((t: any) => t.id === editData.templateId);
       if (template) {
-        setSectionId(template.sectionId);
+        setSectionId(template.section_id);
         setTemplateId(editData.templateId);
         setQuantity(editData.quantity.toString());
         setIncludeInstallation(editData.includeInstallation);
@@ -78,22 +75,19 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
         setOptionEnabled(editData.optionEnabled || false);
         setNotes(editData.notes || "");
         setPriceInstallation(
-          (editData.customPriceInstallation ?? template.priceInstallation).toString()
+          (editData.customPriceInstallation ?? template.price_installation).toString(),
         );
-        setPriceSupply(
-          (editData.customPriceSupply ?? template.priceSupply ?? 0).toString()
-        );
+        setPriceSupply((editData.customPriceSupply ?? template.price_supply ?? 0).toString());
       }
     } else if (!open) {
       resetForm();
     }
-  }, [editData, open]);
+  }, [editData, open, allTemplates]);
 
-  // Update prices when template changes (only for new items)
   useEffect(() => {
     if (selectedTemplate && !editData) {
-      setPriceInstallation(selectedTemplate.priceInstallation.toString());
-      setPriceSupply((selectedTemplate.priceSupply ?? 0).toString());
+      setPriceInstallation(String(selectedTemplate.price_installation));
+      setPriceSupply(String(selectedTemplate.price_supply ?? 0));
     }
   }, [selectedTemplate, editData]);
 
@@ -118,10 +112,10 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
 
   const handleTemplateChange = (value: string) => {
     setTemplateId(value);
-    const template = getTemplateById(value);
+    const template = allTemplates.find((t: any) => t.id === value);
     if (template) {
-      setPriceInstallation(template.priceInstallation.toString());
-      setPriceSupply((template.priceSupply ?? 0).toString());
+      setPriceInstallation(String(template.price_installation));
+      setPriceSupply(String(template.price_supply ?? 0));
     }
   };
 
@@ -129,7 +123,7 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
     if (!templateId || !quantity || parseFloat(quantity) <= 0) {
       toast({
         title: "Error",
-        description: "Selecciona una partida e introduce una cantidad válida",
+        description: "Selecciona una partida e introduce una cantidad valida",
         variant: "destructive",
       });
       return;
@@ -150,21 +144,20 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
     onClose();
 
     toast({
-      title: editData ? "Partida actualizada" : "Partida añadida",
-      description: editData 
+      title: editData ? "Partida actualizada" : "Partida anadida",
+      description: editData
         ? "La partida se ha actualizado correctamente"
-        : "La partida se ha añadido al proyecto",
+        : "La partida se ha anadido al proyecto",
     });
   };
 
-  // Calculate estimated total
   const estimatedTotal = (() => {
     const qty = parseFloat(quantity) || 0;
     let total = 0;
     if (includeInstallation) {
       total += (parseFloat(priceInstallation) || 0) * qty;
     }
-    if (includeSupply && selectedTemplate?.priceSupply) {
+    if (includeSupply && selectedTemplate?.price_supply) {
       total += (parseFloat(priceSupply) || 0) * qty;
     }
     return total;
@@ -175,25 +168,20 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-heading">
-            {editData ? "Editar partida" : "Añadir partida"}
+            {editData ? "Editar partida" : "Anadir partida"}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Selector de sección */}
           <div className="space-y-2">
-            <Label className="text-body font-medium">Sección</Label>
+            <Label className="text-body font-medium">Seccion</Label>
             <Select value={sectionId} onValueChange={handleSectionChange}>
               <SelectTrigger className="h-14 text-body-lg">
-                <SelectValue placeholder="Selecciona sección" />
+                <SelectValue placeholder="Selecciona seccion" />
               </SelectTrigger>
               <SelectContent className="bg-background">
-                {sections.map((section) => (
-                  <SelectItem 
-                    key={section.id} 
-                    value={section.id}
-                    className="h-12 text-body"
-                  >
+                {sections.map((section: any) => (
+                  <SelectItem key={section.id} value={section.id} className="h-12 text-body">
                     {section.icon} {section.name}
                   </SelectItem>
                 ))}
@@ -201,24 +189,15 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
             </Select>
           </div>
 
-          {/* Selector de partida */}
           <div className="space-y-2">
             <Label className="text-body font-medium">Partida</Label>
-            <Select 
-              value={templateId} 
-              onValueChange={handleTemplateChange}
-              disabled={!sectionId}
-            >
+            <Select value={templateId} onValueChange={handleTemplateChange} disabled={!sectionId}>
               <SelectTrigger className="h-14 text-body-lg">
                 <SelectValue placeholder="Selecciona partida" />
               </SelectTrigger>
               <SelectContent className="bg-background">
-                {templates.map((template) => (
-                  <SelectItem 
-                    key={template.id} 
-                    value={template.id}
-                    className="h-12 text-body"
-                  >
+                {templates.map((template: any) => (
+                  <SelectItem key={template.id} value={template.id} className="h-12 text-body">
                     {template.name} ({template.unit})
                   </SelectItem>
                 ))}
@@ -226,7 +205,6 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
             </Select>
           </div>
 
-          {/* Input de cantidad */}
           <div className="space-y-2">
             <Label className="text-body font-medium">
               Cantidad {selectedTemplate && `(${selectedTemplate.unit})`}
@@ -243,14 +221,13 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
             />
           </div>
 
-          {/* Precios editables */}
           {selectedTemplate && (
             <div className="space-y-4 rounded-lg bg-muted/50 p-4">
               <Label className="text-body font-medium">Precios por unidad</Label>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <Label className="text-small min-w-[100px]">Instalación €</Label>
+                  <Label className="text-small min-w-[100px]">Instalacion EUR</Label>
                   <Input
                     type="number"
                     inputMode="decimal"
@@ -262,9 +239,9 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
                   />
                 </div>
 
-                {selectedTemplate.priceSupply !== undefined && (
+                {selectedTemplate.price_supply !== null && (
                   <div className="flex items-center gap-3">
-                    <Label className="text-small min-w-[100px]">Suministro €</Label>
+                    <Label className="text-small min-w-[100px]">Suministro EUR</Label>
                     <Input
                       type="number"
                       inputMode="decimal"
@@ -280,59 +257,42 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
             </div>
           )}
 
-          {/* Toggles */}
           <div className="space-y-4 rounded-lg bg-muted/50 p-4">
             <div className="flex items-center justify-between gap-4">
               <Label className="text-body font-medium cursor-pointer" htmlFor="installation">
-                ☑ Instalación
+                Instalacion
               </Label>
-              <Switch
-                id="installation"
-                checked={includeInstallation}
-                onCheckedChange={setIncludeInstallation}
-              />
+              <Switch id="installation" checked={includeInstallation} onCheckedChange={setIncludeInstallation} />
             </div>
 
-            {selectedTemplate?.priceSupply && (
+            {selectedTemplate?.price_supply && (
               <div className="flex items-center justify-between gap-4">
                 <Label className="text-body font-medium cursor-pointer" htmlFor="supply">
-                  ☑ Suministro
+                  Suministro
                 </Label>
-                <Switch
-                  id="supply"
-                  checked={includeSupply}
-                  onCheckedChange={setIncludeSupply}
-                />
+                <Switch id="supply" checked={includeSupply} onCheckedChange={setIncludeSupply} />
               </div>
             )}
 
-            {selectedTemplate?.hasOption && (
+            {selectedTemplate?.has_option && (
               <div className="flex items-center justify-between gap-4">
                 <Label className="text-body font-medium cursor-pointer" htmlFor="option">
-                  ☑ {selectedTemplate.optionLabel}
+                  {selectedTemplate.option_label}
                 </Label>
-                <Switch
-                  id="option"
-                  checked={optionEnabled}
-                  onCheckedChange={setOptionEnabled}
-                />
+                <Switch id="option" checked={optionEnabled} onCheckedChange={setOptionEnabled} />
               </div>
             )}
           </div>
 
-          {/* Total estimado */}
           {selectedTemplate && parseFloat(quantity) > 0 && (
             <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
               <div className="flex justify-between items-center">
                 <span className="text-body font-medium">Total estimado</span>
-                <span className="text-heading font-bold text-primary">
-                  {formatCurrency(estimatedTotal)}
-                </span>
+                <span className="text-heading font-bold text-primary">{formatCurrency(estimatedTotal)}</span>
               </div>
             </div>
           )}
 
-          {/* Observaciones */}
           <div className="space-y-2">
             <Label className="text-body font-medium">Observaciones</Label>
             <Textarea
@@ -344,14 +304,8 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
           </div>
         </div>
 
-        {/* Botón fijo */}
         <div className="sticky bottom-0 bg-background pt-4 border-t">
-          <Button 
-            variant="action" 
-            size="xl" 
-            className="w-full"
-            onClick={handleSubmit}
-          >
+          <Button variant="action" size="xl" className="w-full" onClick={handleSubmit}>
             <Save className="h-5 w-5" />
             {editData ? "Guardar cambios" : "Guardar partida"}
           </Button>

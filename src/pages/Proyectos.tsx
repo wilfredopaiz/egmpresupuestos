@@ -15,13 +15,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { mockClients, calculateProjectTotal } from "@/data/mockData";
+import { calculateProjectTotal } from "@/lib/calculations";
+import { useClients } from "@/hooks/useClients";
 import { useProjects } from "@/hooks/useProjects";
 import { PlusCircle, Search, Filter, ChevronDown, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Proyectos() {
-  const { projects } = useProjects();
+  const { projects, isLoading, error } = useProjects();
+  const { data: clients = [] } = useClients();
   const [searchQuery, setSearchQuery] = useState("");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
@@ -31,7 +33,7 @@ export default function Proyectos() {
   // Get unique years from projects
   const years = useMemo(() => {
     const uniqueYears = [
-      ...new Set(projects.map((p) => p.createdAt.getFullYear())),
+      ...new Set(projects.map((p) => new Date(p.created_at).getFullYear())),
     ].sort((a, b) => b - a);
     return uniqueYears;
   }, [projects]);
@@ -50,13 +52,14 @@ export default function Proyectos() {
       // Year filter
       if (
         yearFilter !== "all" &&
-        project.createdAt.getFullYear().toString() !== yearFilter
+        new Date(project.created_at).getFullYear().toString() !== yearFilter
       ) {
         return false;
       }
 
       // Client filter
-      if (clientFilter !== "all" && project.client !== clientFilter) {
+      const clientName = project.client?.name ?? project.client_name ?? "Sin cliente";
+      if (clientFilter !== "all" && clientName !== clientFilter) {
         return false;
       }
 
@@ -89,6 +92,22 @@ export default function Proyectos() {
     setBudgetFilter("all");
     setSearchQuery("");
   };
+
+  if (isLoading) {
+    return (
+      <AppLayout title="Proyectos">
+        <p className="text-muted-foreground">Cargando proyectos...</p>
+      </AppLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppLayout title="Proyectos">
+        <p className="text-destructive">No se pudieron cargar los proyectos.</p>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout title="Proyectos">
@@ -180,7 +199,7 @@ export default function Proyectos() {
                   </SelectTrigger>
                   <SelectContent className="bg-background">
                     <SelectItem value="all">Todos los clientes</SelectItem>
-                    {mockClients.map((client) => (
+                    {clients.map((client) => (
                       <SelectItem key={client.id} value={client.name}>
                         {client.name}
                       </SelectItem>

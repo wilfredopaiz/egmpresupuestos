@@ -1,17 +1,13 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Project, 
-  calculateProjectTotal, 
-  formatCurrency, 
-  projectStatuses 
-} from "@/data/mockData";
+import { calculateProjectTotal, formatCurrency } from "@/lib/calculations";
+import { projectStatuses } from "@/data/mockData";
 import { Edit, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface ProjectCardProps {
-  project: Project;
+  project: any;
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
@@ -27,7 +23,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               {project.name}
             </h3>
             <p className="text-body text-muted-foreground truncate">
-              {project.client}
+              {project.client?.name ?? project.client_name ?? "Sin cliente"}
             </p>
           </div>
           <Badge 
@@ -79,7 +75,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         )}
 
         <p className="mt-3 text-small text-muted-foreground/70">
-          {project.items.length} partida{project.items.length !== 1 ? "s" : ""}
+          {(project.items?.length ?? 0)} partida{(project.items?.length ?? 0) !== 1 ? "s" : ""}
         </p>
       </CardContent>
     </Card>

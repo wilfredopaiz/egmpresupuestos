@@ -13,12 +13,14 @@ import {
 } from "@/components/ui/dialog";
 import { Building2, FileText, Info, Ruler, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { measureUnits } from "@/data/mockData";
+import { MEASURE_UNITS } from "@/lib/constants";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Ajustes() {
+  const { user } = useAuth();
   const [addUnitOpen, setAddUnitOpen] = useState(false);
   const [editUnitOpen, setEditUnitOpen] = useState(false);
-  const [selectedUnit, setSelectedUnit] = useState<typeof measureUnits[0] | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<typeof MEASURE_UNITS[0] | null>(null);
 
   const handleSave = () => {
     toast({
@@ -44,14 +46,14 @@ export default function Ajustes() {
     setSelectedUnit(null);
   };
 
-  const handleDeleteUnit = (unit: typeof measureUnits[0]) => {
+  const handleDeleteUnit = (unit: typeof MEASURE_UNITS[0]) => {
     toast({
       title: "Medida eliminada",
       description: `"${unit.label}" se ha eliminado (demo)`,
     });
   };
 
-  const openEditUnit = (unit: typeof measureUnits[0]) => {
+  const openEditUnit = (unit: typeof MEASURE_UNITS[0]) => {
     setSelectedUnit(unit);
     setEditUnitOpen(true);
   };
@@ -68,6 +70,11 @@ export default function Ajustes() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-body font-medium">Usuario autenticado</Label>
+              <Input value={user?.email ?? ""} disabled />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="empresa" className="text-body font-medium">
                 Nombre de empresa
@@ -192,7 +199,7 @@ export default function Ajustes() {
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
-            {measureUnits.map((unit) => (
+            {MEASURE_UNITS.map((unit) => (
               <div 
                 key={unit.id} 
                 className="flex items-center justify-between p-3 rounded-lg bg-muted/50"

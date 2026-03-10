@@ -23,37 +23,42 @@ import {
   calculateProjectTotal,
   calculateProjectTotalBySection,
   formatCurrency,
-  getSectionById,
-  getTemplateById,
-  projectStatuses,
-  ProjectStatus,
-} from "@/data/mockData";
-import { useProject, useProjectActions } from "@/hooks/useProjects";
+  calculateItemTotal,
+} from "@/lib/calculations";
+import { projectStatuses, type ProjectStatus } from "@/data/mockData";
+import { useProject, useUpdateProject } from "@/hooks/useProjects";
 import { Calculator, FileText, Share2, ArrowLeft, ChevronDown, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useSections } from "@/hooks/useSections";
 
 export default function Presupuesto() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const projectIdFromUrl = searchParams.get("proyecto");
   const isEditMode = searchParams.get("modo") === "editar";
-  
-  const { project } = useProject(projectIdFromUrl);
-  const { updateProject } = useProjectActions();
-  
+
+  const { project, isLoading, error } = useProject(projectIdFromUrl);
+  const updateProject = useUpdateProject();
+  const { data: sections = [] } = useSections();
+
   const [includeIVA, setIncludeIVA] = useState(true);
   const [margin, setMargin] = useState("15");
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [isEditingHeader, setIsEditingHeader] = useState(false);
-  
-  // If no project selected, redirect to projects
-  if (!project) {
+
+  if (isLoading) {
+    return (
+      <AppLayout title="Presupuesto">
+        <p className="text-muted-foreground">Cargando presupuesto...</p>
+      </AppLayout>
+    );
+  }
+
+  if (error || !project) {
     return (
       <AppLayout title="Presupuesto">
         <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-          <p className="text-muted-foreground mb-6">
-            Selecciona un proyecto para ver su presupuesto
-          </p>
+          <p className="text-muted-foreground mb-6">Selecciona un proyecto para ver su presupuesto</p>
           <Button variant="action" onClick={() => navigate("/proyectos")}>
             <ArrowLeft className="h-5 w-5" />
             Ir a Proyectos
@@ -64,17 +69,16 @@ export default function Presupuesto() {
   }
 
   const subtotal = calculateProjectTotal(project);
-  const marginAmount = subtotal * (parseFloat(margin) || 0) / 100;
+  const marginAmount = (subtotal * (parseFloat(margin) || 0)) / 100;
   const subtotalWithMargin = subtotal + marginAmount;
   const ivaAmount = includeIVA ? subtotalWithMargin * 0.21 : 0;
   const total = subtotalWithMargin + ivaAmount;
-
   const totalsBySection = calculateProjectTotalBySection(project);
 
   const handleShare = () => {
     toast({
       title: "Compartir presupuesto",
-      description: "Función de compartir (demo)",
+      description: "Funcion de compartir (demo)",
     });
   };
 
@@ -88,45 +92,30 @@ export default function Presupuesto() {
   return (
     <AppLayout title="Presupuesto">
       <div className="space-y-6 w-full">
-        {/* Back button */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => navigate("/proyectos")}
-          className="gap-2 -ml-2"
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate("/proyectos")} className="gap-2 -ml-2">
           <ArrowLeft className="h-4 w-4" />
           Proyectos
         </Button>
 
-        {/* Project header with edit button */}
         <div className="flex items-start justify-between gap-3 pb-2">
           <div className="min-w-0 flex-1">
             <h2 className="text-xl font-bold break-words">{project.name}</h2>
-            <p className="text-sm text-muted-foreground">{project.client}</p>
+            <p className="text-sm text-muted-foreground">{project.client?.name ?? project.client_name ?? "Sin cliente"}</p>
             <Badge className={`${projectStatuses[project.status].color} text-small mt-2`}>
               {projectStatuses[project.status].label}
             </Badge>
           </div>
           <div className="flex gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditingHeader(!isEditingHeader)}
-              className="gap-1"
-            >
+            <Button variant="outline" size="sm" onClick={() => setIsEditingHeader(!isEditingHeader)} className="gap-1">
               <Pencil className="h-4 w-4" />
               <span className="hidden sm:inline">Editar</span>
             </Button>
             <Button variant="action" size="sm" asChild>
-              <Link to={`/proyecto/${project.id}`}>
-                Editar partidas
-              </Link>
+              <Link to={`/proyecto/${project.id}`}>Editar partidas</Link>
             </Button>
           </div>
         </div>
 
-        {/* Edición rápida de estado */}
         {isEditingHeader && (
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="p-4 space-y-3">
@@ -135,7 +124,10 @@ export default function Presupuesto() {
                 <Select
                   value={project.status}
                   onValueChange={(value: ProjectStatus) => {
-                    updateProject(project.id, { status: value });
+                    updateProject.mutate({
+                      id: project.id,
+                      updates: { status: value },
+                    });
                     toast({
                       title: "Estado actualizado",
                       description: `El estado se ha cambiado a "${projectStatuses[value].label}"`,
@@ -154,57 +146,43 @@ export default function Presupuesto() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditingHeader(false)}
-                className="w-full"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setIsEditingHeader(false)} className="w-full">
                 Cerrar
               </Button>
             </CardContent>
           </Card>
         )}
 
-        {/* Desglose por sección */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Calculator className="h-5 w-5 text-primary" />
-              Desglose por sección
+              Desglose por seccion
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {Object.entries(totalsBySection).map(([sectionId, sectionTotal]) => {
-              const section = getSectionById(sectionId);
+              const section = sections.find((s: any) => s.id === sectionId);
               if (!section) return null;
 
               return (
-                <div
-                  key={sectionId}
-                  className="flex items-center justify-between py-3 border-b last:border-0"
-                >
+                <div key={sectionId} className="flex items-center justify-between py-3 border-b last:border-0">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{section.icon}</span>
                     <span className="text-body font-medium">{section.name}</span>
                   </div>
-                  <span className="text-body-lg font-semibold">
-                    {formatCurrency(sectionTotal)}
-                  </span>
+                  <span className="text-body-lg font-semibold">{formatCurrency(sectionTotal)}</span>
                 </div>
               );
             })}
 
             <div className="flex items-center justify-between pt-3 border-t-2">
               <span className="text-body-lg font-semibold">Subtotal</span>
-              <span className="text-heading font-bold">
-                {formatCurrency(subtotal)}
-              </span>
+              <span className="text-heading font-bold">{formatCurrency(subtotal)}</span>
             </div>
           </CardContent>
         </Card>
 
-        {/* Partidas del proyecto */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -213,72 +191,51 @@ export default function Presupuesto() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {project.items.map((item) => {
-              const template = getTemplateById(item.templateId);
+            {(project.items || []).map((item: any) => {
+              const template = item.template;
               if (!template) return null;
-              const section = getSectionById(template.sectionId);
-
-              let itemTotal = 0;
-              if (item.includeInstallation) {
-                itemTotal += template.priceInstallation * item.quantity;
-              }
-              if (item.includeSupply && template.priceSupply) {
-                itemTotal += template.priceSupply * item.quantity;
-              }
+              const itemTotal = calculateItemTotal(item);
 
               return (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-lg bg-muted/50 space-y-2"
-                >
+                <div key={item.id} className="p-4 rounded-lg bg-muted/50 space-y-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-small text-muted-foreground">
-                        {section?.icon} {section?.name}
+                        {template.section?.icon} {template.section?.name}
                       </p>
-                      <p className="text-body font-semibold">
-                        {template.name}
-                      </p>
+                      <p className="text-body font-semibold">{template.name}</p>
                     </div>
-                    <span className="text-body-lg font-bold shrink-0">
-                      {formatCurrency(itemTotal)}
-                    </span>
+                    <span className="text-body-lg font-bold shrink-0">{formatCurrency(itemTotal)}</span>
                   </div>
 
-                  {/* Price breakdown */}
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-small text-muted-foreground">
                     <span>
                       {item.quantity.toLocaleString("es-ES")} {template.unit}
                     </span>
-                    {item.includeInstallation && (
+                    {item.include_installation && (
                       <span>
-                        • Inst: {formatCurrency(template.priceInstallation)}/{template.unit}
+                        Inst: {formatCurrency(template.price_installation)}/{template.unit}
                       </span>
                     )}
-                    {item.includeSupply && template.priceSupply && (
+                    {item.include_supply && template.price_supply && (
                       <span>
-                        • Sum: {formatCurrency(template.priceSupply)}/{template.unit}
+                        Sum: {formatCurrency(template.price_supply)}/{template.unit}
                       </span>
                     )}
                   </div>
 
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-small text-muted-foreground">
-                    {item.includeInstallation && <span>• Instalación</span>}
-                    {item.includeSupply && <span>• Suministro</span>}
+                    {item.include_installation && <span>Instalacion</span>}
+                    {item.include_supply && <span>Suministro</span>}
                   </div>
 
-                  {item.notes && (
-                    <p className="text-small text-muted-foreground italic">
-                      "{item.notes}"
-                    </p>
-                  )}
+                  {item.notes && <p className="text-small text-muted-foreground italic">"{item.notes}"</p>}
                 </div>
               );
             })}
           </CardContent>
         </Card>
 
-        {/* Ajustes - Solo en modo edición */}
         {isEditMode && (
           <Card>
             <CardHeader className="pb-3">
@@ -289,11 +246,7 @@ export default function Presupuesto() {
                 <Label htmlFor="iva" className="text-body font-medium cursor-pointer">
                   Incluir IVA (21%)
                 </Label>
-                <Switch
-                  id="iva"
-                  checked={includeIVA}
-                  onCheckedChange={setIncludeIVA}
-                />
+                <Switch id="iva" checked={includeIVA} onCheckedChange={setIncludeIVA} />
               </div>
 
               <div className="p-4 rounded-lg bg-muted/50">
@@ -316,9 +269,7 @@ export default function Presupuesto() {
           </Card>
         )}
 
-        {/* Totales - Vista cliente (colapsable) o Vista edición */}
         {isEditMode ? (
-          /* Vista de edición - Todo visible */
           <Card className="bg-secondary text-secondary-foreground">
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between text-body">
@@ -347,21 +298,18 @@ export default function Presupuesto() {
             </CardContent>
           </Card>
         ) : (
-          /* Vista cliente - Total grande con desglose colapsable */
           <Card className="bg-secondary text-secondary-foreground">
             <CardContent className="p-6 space-y-4">
-              {/* Total prominente */}
               <div className="flex justify-between items-center">
                 <span className="text-subheading font-semibold">TOTAL</span>
                 <span className="text-display">{formatCurrency(total)}</span>
               </div>
 
-              {/* Desglose colapsable */}
               <Collapsible open={showBreakdown} onOpenChange={setShowBreakdown}>
                 <CollapsibleTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="w-full text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-secondary-foreground/10 gap-2"
                   >
                     Ver desglose
@@ -393,28 +341,16 @@ export default function Presupuesto() {
           </Card>
         )}
 
-        {/* Texto legal */}
         <p className="text-small text-muted-foreground text-center italic px-4">
-          Presupuesto orientativo sujeto a mediciones finales. Validez 30 días.
+          Presupuesto orientativo sujeto a mediciones finales. Validez 30 dias.
         </p>
 
-        {/* Acciones */}
         <div className="flex flex-col sm:flex-row gap-3 pb-4">
-          <Button
-            variant="outline"
-            size="lg"
-            className="flex-1"
-            onClick={handleShare}
-          >
+          <Button variant="outline" size="lg" className="flex-1" onClick={handleShare}>
             <Share2 className="h-5 w-5" />
             Compartir
           </Button>
-          <Button
-            variant="action"
-            size="lg"
-            className="flex-1"
-            onClick={handleExport}
-          >
+          <Button variant="action" size="lg" className="flex-1" onClick={handleExport}>
             <FileText className="h-5 w-5" />
             Exportar PDF
           </Button>

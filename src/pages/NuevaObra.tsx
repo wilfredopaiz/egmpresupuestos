@@ -21,12 +21,15 @@ import {
 } from "@/components/ui/dialog";
 import { HardHat, Plus, User, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { mockClients } from "@/data/mockData";
-import { useProjectActions } from "@/hooks/useProjects";
+import { useCreateProject } from "@/hooks/useProjects";
+import { useClients, useCreateClient } from "@/hooks/useClients";
 
 export default function NuevaObra() {
   const navigate = useNavigate();
-  const { createProject } = useProjectActions();
+  const createProject = useCreateProject();
+  const { data: clients = [], isLoading: loadingClients } = useClients();
+  const createClient = useCreateClient();
+
   const [nombre, setNombre] = useState("");
   const [clienteId, setClienteId] = useState("");
   const [notas, setNotas] = useState("");
@@ -46,23 +49,32 @@ export default function NuevaObra() {
       return;
     }
 
-    const selectedClient = mockClients.find(c => c.id === clienteId);
-    const clientName = selectedClient?.name || "Sin cliente";
+    const selectedClient = clients.find((c) => c.id === clienteId);
 
-    // Crear el proyecto y obtener el nuevo proyecto
-    const newProject = createProject({
-      name: nombre,
-      client: clientName,
-      notes: notas || undefined,
-    });
-
-    toast({
-      title: "Obra creada",
-      description: `"${nombre}" se ha creado correctamente`,
-    });
-
-    // Redirigir a la página de edición del proyecto
-    navigate(`/proyecto/${newProject.id}`);
+    createProject.mutate(
+      {
+        name: nombre.trim(),
+        client_id: selectedClient?.id ?? null,
+        client_name: selectedClient?.name ?? null,
+        notes: notas.trim() || null,
+      },
+      {
+        onSuccess: (project) => {
+          toast({
+            title: "Obra creada",
+            description: `"${nombre}" se ha creado correctamente`,
+          });
+          navigate(`/proyecto/${project.id}`);
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "No se pudo crear la obra",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   const handleAddClient = () => {
@@ -75,25 +87,41 @@ export default function NuevaObra() {
       return;
     }
 
-    toast({
-      title: "Cliente creado",
-      description: `"${newClientName}" se ha añadido (demo)`,
-    });
-    
-    setAddClientOpen(false);
-    setNewClientName("");
-    setNewClientPhone("");
+    createClient.mutate(
+      {
+        name: newClientName.trim(),
+        phone: newClientPhone.trim() || null,
+      },
+      {
+        onSuccess: (client) => {
+          toast({
+            title: "Cliente creado",
+            description: `"${newClientName}" se ha anadido`,
+          });
+          setClienteId(client.id);
+          setAddClientOpen(false);
+          setNewClientName("");
+          setNewClientPhone("");
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "No se pudo crear el cliente",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
-  const selectedClient = mockClients.find(c => c.id === clienteId);
+  const selectedClient = clients.find((c) => c.id === clienteId);
 
   return (
     <AppLayout title="Nueva obra">
       <div className="w-full max-w-lg mx-auto space-y-4">
-        {/* Back button */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => navigate("/proyectos")}
           className="gap-2 -ml-2"
         >
@@ -109,9 +137,7 @@ export default function NuevaObra() {
               </div>
               <div>
                 <h2 className="text-subheading font-semibold">Datos del proyecto</h2>
-                <p className="text-small text-muted-foreground">
-                  Información básica de la obra
-                </p>
+                <p className="text-small text-muted-foreground">Informacion basica de la obra</p>
               </div>
             </div>
 
@@ -122,7 +148,7 @@ export default function NuevaObra() {
                 </Label>
                 <Input
                   id="nombre"
-                  placeholder="Ej: Reforma cocina García"
+                  placeholder="Ej: Reforma cocina Garcia"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   autoFocus
@@ -130,9 +156,7 @@ export default function NuevaObra() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-body font-medium">
-                  Cliente
-                </Label>
+                <Label className="text-body font-medium">Cliente</Label>
                 <div className="flex gap-2">
                   <Select value={clienteId} onValueChange={setClienteId}>
                     <SelectTrigger className="flex-1 h-14">
@@ -146,7 +170,7 @@ export default function NuevaObra() {
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-background">
-                      {mockClients.map((client) => (
+                      {clients.map((client) => (
                         <SelectItem key={client.id} value={client.id} className="py-3">
                           <div className="flex flex-col">
                             <span className="font-medium">{client.name}</span>
@@ -158,9 +182,9 @@ export default function NuevaObra() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     size="icon"
                     className="h-14 w-14 shrink-0"
                     onClick={() => setAddClientOpen(true)}
@@ -183,21 +207,21 @@ export default function NuevaObra() {
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                variant="action" 
-                size="xl" 
+              <Button
+                type="submit"
+                variant="action"
+                size="xl"
                 className="w-full mt-8"
+                disabled={createProject.isPending || loadingClients}
               >
                 <HardHat className="h-5 w-5" />
-                Crear obra
+                {createProject.isPending ? "Creando..." : "Crear obra"}
               </Button>
             </form>
           </CardContent>
         </Card>
       </div>
 
-      {/* Modal de nuevo cliente */}
       <Dialog open={addClientOpen} onOpenChange={setAddClientOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -206,27 +230,27 @@ export default function NuevaObra() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="new-client-name">Nombre *</Label>
-              <Input 
-                id="new-client-name" 
-                placeholder="Ej: Juan García"
+              <Input
+                id="new-client-name"
+                placeholder="Ej: Juan Garcia"
                 value={newClientName}
                 onChange={(e) => setNewClientName(e.target.value)}
-                className="h-12" 
+                className="h-12"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-client-phone">Teléfono</Label>
-              <Input 
-                id="new-client-phone" 
+              <Label htmlFor="new-client-phone">Telefono</Label>
+              <Input
+                id="new-client-phone"
                 type="tel"
                 placeholder="Ej: 600 123 456"
                 value={newClientPhone}
                 onChange={(e) => setNewClientPhone(e.target.value)}
-                className="h-12" 
+                className="h-12"
               />
             </div>
-            <Button variant="action" className="w-full" onClick={handleAddClient}>
-              Crear Cliente
+            <Button variant="action" className="w-full" onClick={handleAddClient} disabled={createClient.isPending}>
+              {createClient.isPending ? "Creando..." : "Crear Cliente"}
             </Button>
           </div>
         </DialogContent>
