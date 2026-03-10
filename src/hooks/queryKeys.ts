@@ -13,4 +13,7 @@ export const queryKeys = {
     all: ["templates"] as const,
     bySection: (sectionId: string) => ["templates", "section", sectionId] as const,
   },
+  appSettings: {
+    one: ["app-settings"] as const,
+  },
 };

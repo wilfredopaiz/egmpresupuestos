@@ -23,12 +23,14 @@ import { HardHat, Plus, User, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useCreateProject } from "@/hooks/useProjects";
 import { useClients, useCreateClient } from "@/hooks/useClients";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 export default function NuevaObra() {
   const navigate = useNavigate();
   const createProject = useCreateProject();
   const { data: clients = [], isLoading: loadingClients } = useClients();
   const createClient = useCreateClient();
+  const { data: appSettings } = useAppSettings();
 
   const [nombre, setNombre] = useState("");
   const [clienteId, setClienteId] = useState("");
@@ -57,6 +59,9 @@ export default function NuevaObra() {
         client_id: selectedClient?.id ?? null,
         client_name: selectedClient?.name ?? null,
         notes: notas.trim() || null,
+        include_iva: true,
+        iva_percentage: appSettings?.settings.defaults.iva_percentage ?? 21,
+        margin_percentage: appSettings?.settings.defaults.margin_percentage ?? 15,
       },
       {
         onSuccess: (project) => {

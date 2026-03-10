@@ -41,6 +41,7 @@ export default function SeccionDetalle() {
   const { data: sections = [], isLoading: loadingSections } = useSections();
   const { data: templates = [], isLoading: loadingTemplates } = useTemplatesBySection(sectionId ?? null);
   const section = sections.find((s: any) => s.id === sectionId);
+  const availableUnits = MEASURE_UNITS.map((unit) => ({ id: unit.id, label: unit.label }));
 
   const handleAddItem = () => {
     toast({
@@ -127,7 +128,7 @@ export default function SeccionDetalle() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-background">
-                      {MEASURE_UNITS.map((unit) => (
+                      {availableUnits.map((unit) => (
                         <SelectItem key={unit.id} value={unit.id}>
                           {unit.label}
                         </SelectItem>
@@ -229,7 +230,7 @@ export default function SeccionDetalle() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background">
-                  {MEASURE_UNITS.map((unit) => (
+                  {availableUnits.map((unit) => (
                     <SelectItem key={unit.id} value={unit.id}>
                       {unit.label}
                     </SelectItem>
