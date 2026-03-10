@@ -270,7 +270,7 @@ export default function ProyectoDetalle() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 text-small">
-                      {item.include_installation && <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">Instalacion</span>}
+                      {item.include_installation && <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">Instalación</span>}
                       {item.include_supply && <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">Suministro</span>}
                       {item.option_enabled && template.option_label && (
                         <span className="px-2 py-1 rounded-md bg-accent text-accent-foreground">{template.option_label}</span>

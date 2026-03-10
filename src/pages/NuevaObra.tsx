@@ -142,7 +142,7 @@ export default function NuevaObra() {
               </div>
               <div>
                 <h2 className="text-subheading font-semibold">Datos del proyecto</h2>
-                <p className="text-small text-muted-foreground">Informacion basica de la obra</p>
+                <p className="text-small text-muted-foreground">Información básica de la obra</p>
               </div>
             </div>
 
@@ -153,7 +153,7 @@ export default function NuevaObra() {
                 </Label>
                 <Input
                   id="nombre"
-                  placeholder="Ej: Reforma cocina Garcia"
+                  placeholder="Ej: Reforma cocina García"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   autoFocus

@@ -76,7 +76,7 @@ export default function SeccionDetalle() {
     if (Number.isNaN(installation) || installation < 0) {
       toast({
         title: "Error",
-        description: "El precio de instalacion debe ser valido",
+        description: "El precio de instalación debe ser valido",
         variant: "destructive",
       });
       return;
@@ -133,7 +133,7 @@ export default function SeccionDetalle() {
     if (Number.isNaN(installation) || installation < 0) {
       toast({
         title: "Error",
-        description: "El precio de instalacion debe ser valido",
+        description: "El precio de instalación debe ser valido",
         variant: "destructive",
       });
       return;
@@ -258,7 +258,7 @@ export default function SeccionDetalle() {
                     <Label htmlFor="item-name">Nombre</Label>
                     <Input
                       id="item-name"
-                      placeholder="Ej: Instalacion enchufe"
+                      placeholder="Ej: Instalación enchufe"
                       className="h-12"
                       value={newItemName}
                       onChange={(e) => setNewItemName(e.target.value)}
@@ -281,7 +281,7 @@ export default function SeccionDetalle() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="item-price-install">Instalacion (EUR)</Label>
+                      <Label htmlFor="item-price-install">Instalación (EUR)</Label>
                       <Input
                         id="item-price-install"
                         type="number"
@@ -369,7 +369,7 @@ export default function SeccionDetalle() {
                 <div className="flex flex-wrap gap-3">
                   <div className="flex items-center gap-2 text-sm">
                     <Wrench className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">Instalacion:</span>
+                    <span className="text-muted-foreground">Instalación:</span>
                     <span className="font-medium">{formatCurrency(template.price_installation)}</span>
                   </div>
 
@@ -427,7 +427,7 @@ export default function SeccionDetalle() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="edit-item-price-install">Instalacion (EUR)</Label>
+                <Label htmlFor="edit-item-price-install">Instalación (EUR)</Label>
                 <Input
                   id="edit-item-price-install"
                   type="number"

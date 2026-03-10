@@ -195,13 +195,14 @@ export default function Dashboard() {
               {Object.entries(PROJECT_STATUSES).map(([key, status]) => {
                 const count = projectsByStatus[key] || 0;
                 return (
-                  <div
+                  <Link
                     key={key}
+                    to={`/proyectos?status=${key}`}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-small ${status.color}`}
                   >
                     <span className="font-medium">{status.label}</span>
                     <span className="font-bold">{count}</span>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

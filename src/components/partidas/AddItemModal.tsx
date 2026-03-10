@@ -227,7 +227,7 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
 
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <Label className="text-small min-w-[100px]">Instalacion EUR</Label>
+                  <Label className="text-small min-w-[100px]">Instalación EUR</Label>
                   <Input
                     type="number"
                     inputMode="decimal"
@@ -260,7 +260,7 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
           <div className="space-y-4 rounded-lg bg-muted/50 p-4">
             <div className="flex items-center justify-between gap-4">
               <Label className="text-body font-medium cursor-pointer" htmlFor="installation">
-                Instalacion
+                Instalación
               </Label>
               <Switch id="installation" checked={includeInstallation} onCheckedChange={setIncludeInstallation} />
             </div>

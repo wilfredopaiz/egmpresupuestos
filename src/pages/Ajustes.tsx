@@ -118,15 +118,15 @@ export default function Ajustes() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="direccion" className="text-body font-medium">
-                Direccion
+              <Label htmlFor="dirección" className="text-body font-medium">
+                Dirección
               </Label>
               <Input id="direccion" placeholder="Calle Ejemplo, 123" value={companyAddress} onChange={(e) => setCompanyAddress(e.target.value)} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="telefono" className="text-body font-medium">
-                Telefono
+                Teléfono
               </Label>
               <Input id="telefono" type="tel" placeholder="600 123 456" value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} />
             </div>
@@ -197,7 +197,7 @@ export default function Ajustes() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Info className="h-5 w-5 text-primary" />
-              Informacion
+              Información
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

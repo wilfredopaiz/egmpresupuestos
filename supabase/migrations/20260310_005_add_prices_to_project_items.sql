@@ -6,7 +6,7 @@ ALTER TABLE public.project_items
   ADD COLUMN price_installation numeric(10,2) NOT NULL DEFAULT 0,
   ADD COLUMN price_supply numeric(10,2);
 
-COMMENT ON COLUMN public.project_items.price_installation IS 'Precio de instalacion snapshot al momento de anadir la partida';
+COMMENT ON COLUMN public.project_items.price_installation IS 'Precio de instalación snapshot al momento de anadir la partida';
 COMMENT ON COLUMN public.project_items.price_supply IS 'Precio de material snapshot al momento de anadir la partida (null si no aplica)';
 
 UPDATE public.project_items pi

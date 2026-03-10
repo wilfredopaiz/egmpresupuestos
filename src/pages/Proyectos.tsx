@@ -16,6 +16,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { calculateProjectTotal } from "@/lib/calculations";
+import { PROJECT_STATUSES } from "@/lib/constants";
 import { useClients } from "@/hooks/useClients";
 import { useProjects } from "@/hooks/useProjects";
 import { PlusCircle, Search, Filter, ChevronDown, X } from "lucide-react";
@@ -24,17 +25,23 @@ import { Link, useSearchParams } from "react-router-dom";
 export default function Proyectos() {
   const [searchParams] = useSearchParams();
   const clientIdFromUrl = searchParams.get("client_id");
+  const statusFromUrl = searchParams.get("status");
   const { projects, isLoading, error } = useProjects();
   const { data: clients = [] } = useClients();
   const [searchQuery, setSearchQuery] = useState("");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>(clientIdFromUrl ?? "all");
+  const [statusFilter, setStatusFilter] = useState<string>(statusFromUrl ?? "all");
   const [budgetFilter, setBudgetFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     setClientFilter(clientIdFromUrl ?? "all");
   }, [clientIdFromUrl]);
+
+  useEffect(() => {
+    setStatusFilter(statusFromUrl ?? "all");
+  }, [statusFromUrl]);
 
   // Get unique years from projects
   const years = useMemo(() => {
@@ -68,6 +75,11 @@ export default function Proyectos() {
         return false;
       }
 
+      // Status filter
+      if (statusFilter !== "all" && project.status !== statusFilter) {
+        return false;
+      }
+
       // Budget filter
       if (budgetFilter !== "all") {
         const total = calculateProjectTotal(project);
@@ -86,14 +98,15 @@ export default function Proyectos() {
 
       return true;
     });
-  }, [projects, searchQuery, yearFilter, clientFilter, budgetFilter]);
+  }, [projects, searchQuery, yearFilter, clientFilter, statusFilter, budgetFilter]);
 
   const hasActiveFilters =
-    yearFilter !== "all" || clientFilter !== "all" || budgetFilter !== "all";
+    yearFilter !== "all" || clientFilter !== "all" || statusFilter !== "all" || budgetFilter !== "all";
 
   const clearFilters = () => {
     setYearFilter("all");
     setClientFilter("all");
+    setStatusFilter("all");
     setBudgetFilter("all");
     setSearchQuery("");
   };
@@ -142,7 +155,7 @@ export default function Proyectos() {
               <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
                 {[yearFilter, clientFilter, budgetFilter].filter(
                   (f) => f !== "all"
-                ).length}
+                ).length + (statusFilter !== "all" ? 1 : 0)}
               </span>
             )}
             <ChevronDown
@@ -172,7 +185,7 @@ export default function Proyectos() {
         {/* Collapsible filters */}
         <Collapsible open={showFilters} onOpenChange={setShowFilters}>
           <CollapsibleContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-lg bg-muted/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 rounded-lg bg-muted/50">
               {/* Year filter */}
               <div className="space-y-1.5">
                 <label className="text-small font-medium text-muted-foreground">
@@ -207,6 +220,26 @@ export default function Proyectos() {
                     {clients.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
                         {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Status filter */}
+              <div className="space-y-1.5">
+                <label className="text-small font-medium text-muted-foreground">
+                  Estado
+                </label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background">
+                    <SelectItem value="all">Todos los estados</SelectItem>
+                    {Object.entries(PROJECT_STATUSES).map(([key, status]) => (
+                      <SelectItem key={key} value={key}>
+                        {status.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -182,7 +182,7 @@ export default function Presupuesto() {
                   </div>
 
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-small text-muted-foreground">
-                    {item.include_installation && <span>Instalacion</span>}
+                    {item.include_installation && <span>Instalación</span>}
                     {item.include_supply && <span>Suministro</span>}
                   </div>
 
