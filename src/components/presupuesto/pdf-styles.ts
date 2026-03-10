@@ -50,6 +50,19 @@ export const pdfStyles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
   },
+  infoGrid: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  infoCol: {
+    flex: 1,
+  },
+  budgetNumber: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: "#374151",
+    marginBottom: 4,
+  },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#f3f4f6",

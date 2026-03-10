@@ -64,6 +64,8 @@ export function PresupuestoPDF({
   const issueDate = new Date();
   const budgetNumber = `PRE-${String(project.id ?? "").slice(0, 8).toUpperCase()}`;
   const clientName = project.client?.name ?? project.client_name ?? "Cliente no especificado";
+  const clientEmail = project.client?.email ?? null;
+  const clientPhone = project.client?.phone ?? null;
 
   const items = project.items ?? [];
 
@@ -82,17 +84,20 @@ export function PresupuestoPDF({
         </View>
 
         <View style={[styles.section, styles.box]}>
-          <Text style={styles.h1}>Presupuesto</Text>
-          <View style={styles.row}>
-            <Text>Fecha emision: {formatDate(issueDate)}</Text>
-            <Text>Nro: {budgetNumber}</Text>
+          <View style={styles.infoGrid}>
+            <View style={styles.infoCol}>
+              <Text style={styles.h1}>Presupuesto</Text>
+              <Text style={styles.budgetNumber}>Nro: {budgetNumber}</Text>
+              <Text>Fecha emision: {formatDate(issueDate)}</Text>
+              <Text style={styles.muted}>Validez: {validityDays} dias</Text>
+            </View>
+            <View style={styles.infoCol}>
+              <Text style={styles.h2}>Cliente</Text>
+              <Text>{clientName}</Text>
+              {clientEmail ? <Text style={styles.muted}>Email: {clientEmail}</Text> : null}
+              {clientPhone ? <Text style={styles.muted}>Telefono: {clientPhone}</Text> : null}
+            </View>
           </View>
-          <Text style={styles.muted}>Validez: {validityDays} dias</Text>
-        </View>
-
-        <View style={[styles.section, styles.box]}>
-          <Text style={styles.h2}>Cliente</Text>
-          <Text>{clientName}</Text>
         </View>
 
         <View style={styles.section}>

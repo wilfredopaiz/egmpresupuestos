@@ -168,7 +168,7 @@ export function AddItemModal({ open, onClose, onAdd, editData }: AddItemModalPro
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-heading">
-            {editData ? "Editar partida" : "Anadir partida"}
+            {editData ? "Editar partida" : "Añadir partida"}
           </DialogTitle>
         </DialogHeader>
 

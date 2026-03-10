@@ -6,9 +6,10 @@ import { HardHat, Menu } from "lucide-react";
 interface AppLayoutProps {
   children: ReactNode;
   title?: string;
+  headerActions?: ReactNode;
 }
 
-export function AppLayout({ children, title }: AppLayoutProps) {
+export function AppLayout({ children, title, headerActions }: AppLayoutProps) {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -32,6 +33,8 @@ export function AppLayout({ children, title }: AppLayoutProps) {
                 {title}
               </h1>
             )}
+
+            {headerActions && <div className="ml-auto">{headerActions}</div>}
           </header>
 
           {/* Main content */}

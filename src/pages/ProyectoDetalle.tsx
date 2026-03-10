@@ -14,6 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { AddItemModal } from "@/components/partidas/AddItemModal";
 import { AttachmentUploader } from "@/components/attachments/AttachmentUploader";
 import { AttachmentGrid } from "@/components/attachments/AttachmentGrid";
@@ -28,6 +35,7 @@ import {
   useUpdateProject,
 } from "@/hooks/useProjects";
 import { useAttachments, useDeleteAttachment } from "@/hooks/useAttachments";
+import { useClients } from "@/hooks/useClients";
 import { Plus, Calculator, ArrowLeft, Trash2, Pencil, Paperclip } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -38,6 +46,7 @@ export default function ProyectoDetalle() {
   const updateItem = useUpdateProjectItem();
   const removeItem = useRemoveProjectItem();
   const updateProject = useUpdateProject();
+  const { data: clients = [] } = useClients();
   const { data: attachments = [] } = useAttachments(id || null);
   const deleteAttachment = useDeleteAttachment();
 
@@ -46,6 +55,12 @@ export default function ProyectoDetalle() {
   const [marginInput, setMarginInput] = useState<string | null>(null);
   const [ivaInput, setIvaInput] = useState<string | null>(null);
   const [showUploader, setShowUploader] = useState(false);
+
+  const [editMetaOpen, setEditMetaOpen] = useState(false);
+  const [projectNameInput, setProjectNameInput] = useState("");
+  const [projectNotesInput, setProjectNotesInput] = useState("");
+  const [projectClientIdInput, setProjectClientIdInput] = useState("__none__");
+  const [projectStatusInput, setProjectStatusInput] = useState<ProjectStatus>("en-medicion");
 
   if (isLoading) {
     return (
@@ -152,7 +167,7 @@ export default function ProyectoDetalle() {
 
   const handleDeleteAttachment = (attachment: any) => {
     if (!id) return;
-    const confirmed = window.confirm(`Eliminar "${attachment.filename}"?`);
+    const confirmed = window.confirm(`Eliminar \"${attachment.filename}\"?`);
     if (!confirmed) return;
 
     deleteAttachment.mutate(
@@ -175,8 +190,57 @@ export default function ProyectoDetalle() {
     );
   };
 
+  const openEditMeta = () => {
+    setProjectNameInput(project.name ?? "");
+    setProjectNotesInput(project.notes ?? "");
+    setProjectClientIdInput(project.client_id ?? "__none__");
+    setProjectStatusInput(project.status);
+    setEditMetaOpen(true);
+  };
+
+  const handleSaveProjectMeta = () => {
+    const selectedClient = clients.find((client) => client.id === projectClientIdInput);
+
+    updateProject.mutate(
+      {
+        id: project.id,
+        updates: {
+          name: projectNameInput.trim() || project.name,
+          notes: projectNotesInput.trim() || null,
+          status: projectStatusInput,
+          client_id: projectClientIdInput === "__none__" ? null : projectClientIdInput,
+          client_name: selectedClient?.name ?? null,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Datos actualizados",
+            description: "Se guardaron los datos del proyecto",
+          });
+          setEditMetaOpen(false);
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "No se pudieron guardar los datos",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
   return (
-    <AppLayout title={project.name}>
+    <AppLayout
+      title={`Editar obra: ${project.name}`}
+      headerActions={
+        <Button variant="outline" size="sm" onClick={openEditMeta} className="gap-2">
+          <Pencil className="h-4 w-4" />
+          Editar datos
+        </Button>
+      }
+    >
       <div className="flex flex-col gap-6 overflow-hidden">
         <Card className="flex-shrink-0">
           <CardContent className="p-5">
@@ -186,34 +250,6 @@ export default function ProyectoDetalle() {
                 <p className="text-body text-muted-foreground">{project.client?.name ?? project.client_name ?? "Sin cliente"}</p>
               </div>
               <Badge className={`${status.color} text-small shrink-0 self-start`}>{status.label}</Badge>
-            </div>
-
-            <div className="mb-4 p-4 rounded-xl bg-white shadow-sm border border-border space-y-2">
-              <Label className="text-body font-medium">Estado del proyecto</Label>
-              <Select
-                value={project.status}
-                onValueChange={(value: ProjectStatus) => {
-                  updateProject.mutate({
-                    id: project.id,
-                    updates: { status: value },
-                  });
-                  toast({
-                    title: "Estado actualizado",
-                    description: `El estado se ha cambiado a "${PROJECT_STATUSES[value].label}"`,
-                  });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-background">
-                  {Object.entries(PROJECT_STATUSES).map(([key, { label }]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             {project.notes && <p className="text-body text-muted-foreground mb-4 break-words">{project.notes}</p>}
@@ -320,7 +356,7 @@ export default function ProyectoDetalle() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 text-small">
-                      {item.include_installation && <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">Instalación</span>}
+                      {item.include_installation && <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">Instalacion</span>}
                       {item.include_supply && <span className="px-2 py-1 rounded-md bg-primary/10 text-primary">Suministro</span>}
                       {item.option_enabled && template.option_label && (
                         <span className="px-2 py-1 rounded-md bg-accent text-accent-foreground">{template.option_label}</span>
@@ -474,6 +510,62 @@ export default function ProyectoDetalle() {
             : undefined
         }
       />
+
+      <Dialog open={editMetaOpen} onOpenChange={setEditMetaOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar datos del proyecto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="meta-name">Titulo</Label>
+              <Input id="meta-name" value={projectNameInput} onChange={(e) => setProjectNameInput(e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Cliente</Label>
+              <Select value={projectClientIdInput} onValueChange={setProjectClientIdInput}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  <SelectItem value="__none__">Sin cliente</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="meta-status">Estado</Label>
+              <Select value={projectStatusInput} onValueChange={(value: ProjectStatus) => setProjectStatusInput(value)}>
+                <SelectTrigger id="meta-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  {Object.entries(PROJECT_STATUSES).map(([key, { label }]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="meta-notes">Descripcion</Label>
+              <Textarea id="meta-notes" rows={4} value={projectNotesInput} onChange={(e) => setProjectNotesInput(e.target.value)} />
+            </div>
+
+            <Button variant="action" className="w-full" onClick={handleSaveProjectMeta} disabled={updateProject.isPending}>
+              {updateProject.isPending ? "Guardando..." : "Guardar cambios"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

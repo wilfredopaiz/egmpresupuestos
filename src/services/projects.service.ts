@@ -19,7 +19,7 @@ async function getRequiredUserId() {
 
 const PROJECT_SELECT = `
   *,
-  client:clients(id, name),
+  client:clients(id, name, email, phone),
   items:project_items(
     *,
     template:item_templates(
