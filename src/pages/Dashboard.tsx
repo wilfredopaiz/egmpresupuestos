@@ -17,22 +17,6 @@ import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const { projects, isLoading, error } = useProjects();
-
-  if (isLoading) {
-    return (
-      <AppLayout title="Dashboard">
-        <p className="text-muted-foreground">Cargando dashboard...</p>
-      </AppLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <AppLayout title="Dashboard">
-        <p className="text-destructive">No se pudieron cargar los datos.</p>
-      </AppLayout>
-    );
-  }
   
   // Valores calculados desde proyectos reales
   const stats = useMemo(() => {
@@ -82,6 +66,22 @@ export default function Dashboard() {
       topBudgetProjects,
     };
   }, [projects]);
+
+  if (isLoading) {
+    return (
+      <AppLayout title="Dashboard">
+        <p className="text-muted-foreground">Cargando dashboard...</p>
+      </AppLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppLayout title="Dashboard">
+        <p className="text-destructive">No se pudieron cargar los datos.</p>
+      </AppLayout>
+    );
+  }
 
   const { 
     totalProjects, 
