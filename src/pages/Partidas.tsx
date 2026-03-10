@@ -3,9 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FolderPlus, ChevronRight, MoreVertical, Pencil, Trash2, Eye } from "lucide-react";
+import { FolderPlus, ChevronRight, MoreVertical, Pencil, Eye, EyeOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useSections, useTemplates } from "@/hooks/useSections";
+import {
+  useSections,
+  useTemplates,
+  useCreateSection,
+  useUpdateSection,
+  useToggleSectionHidden,
+} from "@/hooks/useSections";
 import { SECTION_ICONS } from "@/lib/constants";
 import {
   Dialog,
@@ -14,16 +20,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,17 +35,24 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 export default function Partidas() {
   const navigate = useNavigate();
-  const { data: sections = [], isLoading: loadingSections, error: sectionsError } = useSections();
-  const { data: templates = [], isLoading: loadingTemplates } = useTemplates();
+  const [showHidden, setShowHidden] = useState(false);
+  const { data: sections = [], isLoading: loadingSections, error: sectionsError } = useSections(showHidden);
+  const { data: templates = [], isLoading: loadingTemplates } = useTemplates(showHidden);
+  const createSection = useCreateSection();
+  const updateSection = useUpdateSection();
+  const toggleSectionHidden = useToggleSectionHidden();
 
   const [addSectionOpen, setAddSectionOpen] = useState(false);
   const [editSectionOpen, setEditSectionOpen] = useState(false);
-  const [deleteSectionOpen, setDeleteSectionOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState<any | null>(null);
-  const [newSectionEmoji, setNewSectionEmoji] = useState("🧱");
+
+  const [newSectionName, setNewSectionName] = useState("");
+  const [newSectionEmoji, setNewSectionEmoji] = useState(SECTION_ICONS[0]);
+  const [editSectionName, setEditSectionName] = useState("");
   const [editSectionEmoji, setEditSectionEmoji] = useState("");
 
   const templateCountBySection = useMemo(() => {
@@ -61,41 +64,112 @@ export default function Partidas() {
   }, [templates]);
 
   const handleAddSection = () => {
-    toast({
-      title: "Pendiente",
-      description: "Creacion de secciones se conecta en la siguiente fase.",
-    });
-    setAddSectionOpen(false);
-    setNewSectionEmoji("🧱");
+    if (!newSectionName.trim()) {
+      toast({
+        title: "Error",
+        description: "El nombre de la seccion es obligatorio",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createSection.mutate(
+      {
+        name: newSectionName.trim(),
+        icon: newSectionEmoji,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Seccion creada",
+            description: `"${newSectionName.trim()}" se ha creado correctamente`,
+          });
+          setAddSectionOpen(false);
+          setNewSectionName("");
+          setNewSectionEmoji(SECTION_ICONS[0]);
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "No se pudo crear la seccion",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   const handleEditSection = () => {
-    toast({
-      title: "Pendiente",
-      description: "Edicion de secciones se conecta en la siguiente fase.",
-    });
-    setEditSectionOpen(false);
-    setSelectedSection(null);
-  };
+    if (!selectedSection) return;
 
-  const handleDeleteSection = () => {
-    toast({
-      title: "Pendiente",
-      description: "Eliminacion de secciones se conecta en la siguiente fase.",
-    });
-    setDeleteSectionOpen(false);
-    setSelectedSection(null);
+    if (!editSectionName.trim()) {
+      toast({
+        title: "Error",
+        description: "El nombre de la seccion es obligatorio",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateSection.mutate(
+      {
+        id: selectedSection.id,
+        updates: {
+          name: editSectionName.trim(),
+          icon: editSectionEmoji,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Seccion actualizada",
+            description: `"${editSectionName.trim()}" se ha actualizado`,
+          });
+          setEditSectionOpen(false);
+          setSelectedSection(null);
+          setEditSectionName("");
+          setEditSectionEmoji("");
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "No se pudo actualizar la seccion",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   const openEditModal = (section: any) => {
     setSelectedSection(section);
+    setEditSectionName(section.name);
     setEditSectionEmoji(section.icon);
     setEditSectionOpen(true);
   };
 
-  const openDeleteModal = (section: any) => {
-    setSelectedSection(section);
-    setDeleteSectionOpen(true);
+  const handleToggleHidden = (section: any, hidden: boolean) => {
+    toggleSectionHidden.mutate(
+      {
+        id: section.id,
+        hidden,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: hidden ? "Seccion oculta" : "Seccion visible",
+            description: `"${section.name}" ${hidden ? "se ha ocultado" : "se ha reactivado"}`,
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "No se pudo actualizar la seccion",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   if (loadingSections || loadingTemplates) {
@@ -117,8 +191,16 @@ export default function Partidas() {
   return (
     <AppLayout title="Partidas">
       <div className="space-y-4 w-full">
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-sm">Selecciona una seccion</p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <p className="text-muted-foreground text-sm">Selecciona una seccion</p>
+            <div className="flex items-center gap-2">
+              <Switch id="show-hidden-sections" checked={showHidden} onCheckedChange={setShowHidden} />
+              <Label htmlFor="show-hidden-sections" className="text-sm text-muted-foreground">
+                Mostrar ocultas
+              </Label>
+            </div>
+          </div>
 
           <Dialog open={addSectionOpen} onOpenChange={setAddSectionOpen}>
             <DialogTrigger asChild>
@@ -134,7 +216,13 @@ export default function Partidas() {
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="section-name">Nombre</Label>
-                  <Input id="section-name" placeholder="Ej: Carpinteria" className="h-12" />
+                  <Input
+                    id="section-name"
+                    placeholder="Ej: Carpinteria"
+                    className="h-12"
+                    value={newSectionName}
+                    onChange={(e) => setNewSectionName(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Icono</Label>
@@ -160,7 +248,7 @@ export default function Partidas() {
                   </Select>
                 </div>
                 <Button variant="action" className="w-full" onClick={handleAddSection}>
-                  Crear Seccion
+                  {createSection.isPending ? "Creando..." : "Crear Seccion"}
                 </Button>
               </div>
             </DialogContent>
@@ -172,7 +260,7 @@ export default function Partidas() {
             const count = templateCountBySection[section.id] || 0;
 
             return (
-              <Card key={section.id} className="p-0 overflow-hidden">
+              <Card key={section.id} className={`p-0 overflow-hidden ${section.hidden ? "opacity-60" : ""}`}>
                 <div className="flex items-center justify-between p-5 bg-card hover:bg-muted/50 transition-colors">
                   <div
                     className="flex items-center gap-4 flex-1 cursor-pointer"
@@ -180,7 +268,14 @@ export default function Partidas() {
                   >
                     <span className="text-3xl">{section.icon}</span>
                     <div>
-                      <h3 className="font-semibold text-lg">{section.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg">{section.name}</h3>
+                        {section.hidden && (
+                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
+                            Oculta
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {count} {count === 1 ? "partida" : "partidas"}
                       </p>
@@ -204,16 +299,19 @@ export default function Partidas() {
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => openDeleteModal(section)}
-                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleToggleHidden(section, !section.hidden)}
+                          className={section.hidden ? "" : "text-destructive focus:text-destructive"}
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Eliminar
+                          <EyeOff className="h-4 w-4 mr-2" />
+                          {section.hidden ? "Mostrar" : "Ocultar"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <ChevronRight className="h-6 w-6 text-muted-foreground cursor-pointer" onClick={() => navigate(`/partidas/${section.id}`)} />
+                    <ChevronRight
+                      className="h-6 w-6 text-muted-foreground cursor-pointer"
+                      onClick={() => navigate(`/partidas/${section.id}`)}
+                    />
                   </div>
                 </div>
               </Card>
@@ -230,7 +328,12 @@ export default function Partidas() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="edit-section-name">Nombre</Label>
-              <Input id="edit-section-name" defaultValue={selectedSection?.name} className="h-12" />
+              <Input
+                id="edit-section-name"
+                value={editSectionName}
+                onChange={(e) => setEditSectionName(e.target.value)}
+                className="h-12"
+              />
             </div>
             <div className="space-y-2">
               <Label>Icono</Label>
@@ -256,31 +359,11 @@ export default function Partidas() {
               </Select>
             </div>
             <Button variant="action" className="w-full" onClick={handleEditSection}>
-              Guardar cambios
+              {updateSection.isPending ? "Guardando..." : "Guardar cambios"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={deleteSectionOpen} onOpenChange={setDeleteSectionOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar seccion?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se eliminara la seccion "{selectedSection?.name}" y todas sus partidas.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteSection}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </AppLayout>
   );
 }

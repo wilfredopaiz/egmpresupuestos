@@ -72,6 +72,7 @@ export type Database = {
         Row: {
           created_at: string;
           has_option: boolean | null;
+          hidden: boolean;
           id: string;
           name: string;
           option_label: string | null;
@@ -84,6 +85,7 @@ export type Database = {
         Insert: {
           created_at?: string;
           has_option?: boolean | null;
+          hidden?: boolean;
           id?: string;
           name: string;
           option_label?: string | null;
@@ -96,6 +98,7 @@ export type Database = {
         Update: {
           created_at?: string;
           has_option?: boolean | null;
+          hidden?: boolean;
           id?: string;
           name?: string;
           option_label?: string | null;
@@ -272,6 +275,7 @@ export type Database = {
       sections: {
         Row: {
           created_at: string;
+          hidden: boolean;
           icon: string;
           id: string;
           name: string;
@@ -280,6 +284,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          hidden?: boolean;
           icon?: string;
           id?: string;
           name: string;
@@ -288,6 +293,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          hidden?: boolean;
           icon?: string;
           id?: string;
           name?: string;

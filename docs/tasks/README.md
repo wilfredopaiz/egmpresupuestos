@@ -20,6 +20,7 @@ Resolver los problemas de persistencia y consistencia de datos que existen actua
 003-ajustes-en-db.md                  → Tabla app_settings (global) + persistir ajustes
 004-corregir-rls-single-tenant.md     → Reemplazar RLS multi-tenant por single-tenant
 005-pagina-clientes.md                → Página /clientes con CRUD completo
+006-crud-partidas-secciones.md        → CRUD completo + ocultar secciones y plantillas
 ```
 
 Las tasks son independientes entre sí, pero el orden sugerido va de menor a mayor impacto en el schema.
