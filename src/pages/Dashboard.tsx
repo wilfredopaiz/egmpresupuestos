@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, calculateProjectTotal } from "@/lib/calculations";
-import { projectStatuses } from "@/data/mockData";
+import { PROJECT_STATUSES } from "@/lib/constants";
 import { useProjects } from "@/hooks/useProjects";
 import {
   TrendingUp,
@@ -192,7 +192,7 @@ export default function Dashboard() {
               <span className="text-small font-medium">Estado de proyectos</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(projectStatuses).map(([key, status]) => {
+              {Object.entries(PROJECT_STATUSES).map(([key, status]) => {
                 const count = projectsByStatus[key] || 0;
                 return (
                   <div

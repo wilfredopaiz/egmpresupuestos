@@ -25,7 +25,8 @@ import {
   formatCurrency,
   calculateItemTotal,
 } from "@/lib/calculations";
-import { projectStatuses, type ProjectStatus } from "@/data/mockData";
+import { PROJECT_STATUSES } from "@/lib/constants";
+import type { ProjectStatus } from "@/types";
 import { useProject, useUpdateProject } from "@/hooks/useProjects";
 import { Calculator, FileText, Share2, ArrowLeft, ChevronDown, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -101,8 +102,8 @@ export default function Presupuesto() {
           <div className="min-w-0 flex-1">
             <h2 className="text-xl font-bold break-words">{project.name}</h2>
             <p className="text-sm text-muted-foreground">{project.client?.name ?? project.client_name ?? "Sin cliente"}</p>
-            <Badge className={`${projectStatuses[project.status].color} text-small mt-2`}>
-              {projectStatuses[project.status].label}
+            <Badge className={`${PROJECT_STATUSES[project.status].color} text-small mt-2`}>
+              {PROJECT_STATUSES[project.status].label}
             </Badge>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -130,7 +131,7 @@ export default function Presupuesto() {
                     });
                     toast({
                       title: "Estado actualizado",
-                      description: `El estado se ha cambiado a "${projectStatuses[value].label}"`,
+                      description: `El estado se ha cambiado a "${PROJECT_STATUSES[value].label}"`,
                     });
                   }}
                 >
@@ -138,7 +139,7 @@ export default function Presupuesto() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
-                    {Object.entries(projectStatuses).map(([key, { label }]) => (
+                    {Object.entries(PROJECT_STATUSES).map(([key, { label }]) => (
                       <SelectItem key={key} value={key}>
                         {label}
                       </SelectItem>

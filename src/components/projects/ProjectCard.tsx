@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { calculateProjectTotal, formatCurrency } from "@/lib/calculations";
-import { projectStatuses } from "@/data/mockData";
+import { PROJECT_STATUSES } from "@/lib/constants";
 import { Edit, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -12,7 +12,7 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const total = calculateProjectTotal(project);
-  const status = projectStatuses[project.status];
+  const status = PROJECT_STATUSES[project.status];
 
   return (
     <Card className="hover:shadow-elevated transition-shadow duration-300 group">

@@ -36,3 +36,13 @@ export const SECTION_ICONS = [
   "📏",
   "🪜",
 ] as const;
+
+export const SECTION_EMOJIS = SECTION_ICONS;
+
+export const PROJECT_STATUSES = {
+  "en-medicion": { label: "En medicion", color: "bg-amber-100 text-amber-800" },
+  presupuestado: { label: "Presupuestado", color: "bg-blue-100 text-blue-800" },
+  aprobado: { label: "Aprobado", color: "bg-green-100 text-green-800" },
+  "en-obra": { label: "En obra", color: "bg-purple-100 text-purple-800" },
+  finalizado: { label: "Finalizado", color: "bg-gray-100 text-gray-800" },
+} as const;

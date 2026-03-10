@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { AddItemModal } from "@/components/partidas/AddItemModal";
 import { calculateItemTotal, formatCurrency } from "@/lib/calculations";
-import { projectStatuses } from "@/data/mockData";
+import { PROJECT_STATUSES } from "@/lib/constants";
 import {
   useProject,
   useAddProjectItem,
@@ -61,7 +61,7 @@ export default function ProyectoDetalle() {
   const subtotalWithMargin = subtotal + marginAmount;
   const ivaAmount = includeIVA ? subtotalWithMargin * 0.21 : 0;
   const total = subtotalWithMargin + ivaAmount;
-  const status = projectStatuses[project.status];
+  const status = PROJECT_STATUSES[project.status];
 
   const handleAddItem = (data: {
     templateId: string;
