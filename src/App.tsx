@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Proyectos from "./pages/Proyectos";
 import NuevaObra from "./pages/NuevaObra";
@@ -26,16 +27,79 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Index />} />
-            <Route path="/proyectos" element={<Proyectos />} />
-            <Route path="/nueva-obra" element={<NuevaObra />} />
-            <Route path="/partidas" element={<Partidas />} />
-            <Route path="/partidas/:sectionId" element={<SeccionDetalle />} />
-            <Route path="/presupuesto" element={<Presupuesto />} />
-            <Route path="/proyecto/:id" element={<ProyectoDetalle />} />
-            <Route path="/ajustes" element={<Ajustes />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/proyectos"
+              element={
+                <ProtectedRoute>
+                  <Proyectos />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/nueva-obra"
+              element={
+                <ProtectedRoute>
+                  <NuevaObra />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/partidas"
+              element={
+                <ProtectedRoute>
+                  <Partidas />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/partidas/:sectionId"
+              element={
+                <ProtectedRoute>
+                  <SeccionDetalle />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/presupuesto"
+              element={
+                <ProtectedRoute>
+                  <Presupuesto />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/proyecto/:id"
+              element={
+                <ProtectedRoute>
+                  <ProyectoDetalle />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ajustes"
+              element={
+                <ProtectedRoute>
+                  <Ajustes />
+                </ProtectedRoute>
+              }
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route
+              path="*"
+              element={
+                <ProtectedRoute>
+                  <NotFound />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
