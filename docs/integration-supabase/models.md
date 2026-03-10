@@ -47,7 +47,7 @@ Extiende `auth.users`. Se crea automáticamente al registrarse un usuario.
 
 ## clients
 
-Clientes del contratista. Cada usuario tiene sus propios clientes.
+Clientes de la empresa. Compartidos entre todos los usuarios.
 
 | Campo | Tipo | Nullable | Descripción |
 |-------|------|----------|-------------|
@@ -59,7 +59,7 @@ Clientes del contratista. Cada usuario tiene sus propios clientes.
 | `created_at` | `timestamptz` | NO | Default: `now()` |
 | `updated_at` | `timestamptz` | NO | Default: `now()` · Auto-update trigger |
 
-**RLS:** solo el propietario (`user_id = auth.uid()`) puede ver y modificar sus clientes.
+**RLS:** todos los autenticados ven y editan todos los clientes. `user_id` = auditoría (quién lo creó).
 
 ---
 
@@ -79,7 +79,7 @@ Secciones de trabajo (Albañilería, Pladur, Fontanería...).
 | `sort_order` | `int` | SÍ | Orden de visualización |
 | `created_at` | `timestamptz` | NO | Default: `now()` |
 
-**RLS:** lectura de globales + propias. Escritura solo de las propias.
+**RLS:** todos los autenticados ven y editan todas las secciones/plantillas. `user_id` = auditoría.
 
 **Catálogo global (seed):**
 | icon | name |
@@ -113,7 +113,7 @@ Plantillas de partidas presupuestarias con precios unitarios.
 | `option_label` | `text` | SÍ | Etiqueta de la opción (ej: "Incluye escalera") |
 | `created_at` | `timestamptz` | NO | Default: `now()` |
 
-**RLS:** lectura de globales + propias. Escritura solo de las propias.
+**RLS:** todos los autenticados ven y editan todas las secciones/plantillas. `user_id` = auditoría.
 
 **Catálogo global (seed):**
 
@@ -140,7 +140,7 @@ Plantillas de partidas presupuestarias con precios unitarios.
 
 ## projects
 
-Obras o proyectos de reforma. Cada proyecto pertenece a un usuario.
+Obras o proyectos de reforma. Compartidos entre todos los usuarios. `user_id` indica quién lo creó.
 
 | Campo | Tipo | Nullable | Descripción |
 |-------|------|----------|-------------|
@@ -154,7 +154,7 @@ Obras o proyectos de reforma. Cada proyecto pertenece a un usuario.
 | `created_at` | `timestamptz` | NO | Default: `now()` |
 | `updated_at` | `timestamptz` | NO | Default: `now()` · Auto-update trigger |
 
-**RLS:** solo el propietario puede ver y modificar sus proyectos.
+**RLS:** todos los autenticados ven y editan todos los proyectos. `user_id` = auditoría (quién lo creó).
 
 **Enum `project_status`:**
 
@@ -188,7 +188,7 @@ Partidas incluidas en un proyecto. Cada fila es una plantilla aplicada con canti
 | `created_at` | `timestamptz` | NO | Default: `now()` |
 | `updated_at` | `timestamptz` | NO | Default: `now()` · Auto-update trigger |
 
-**RLS:** acceso via subquery → solo si `projects.user_id = auth.uid()`.
+**RLS:** todos los autenticados ven y editan todas las partidas.
 
 **Cálculo del importe de una partida:**
 ```
@@ -196,6 +196,33 @@ total = 0
 if include_installation: total += template.price_installation * quantity
 if include_supply and template.price_supply: total += template.price_supply * quantity
 ```
+
+---
+
+## app_settings
+
+Ajustes globales de la aplicación (single-tenant). **Una única fila** compartida por todos los usuarios.
+
+| Campo | Tipo | Nullable | Descripción |
+|-------|------|----------|-------------|
+| `id` | `uuid` | NO | PK · `gen_random_uuid()` |
+| `settings` | `jsonb` | NO | JSON con company, defaults y custom_units |
+| `created_at` | `timestamptz` | NO | Default: `now()` |
+| `updated_at` | `timestamptz` | NO | Default: `now()` · Auto-update trigger |
+
+**RLS:** todos los autenticados pueden leer y actualizar. Insert protegido (solo si no hay filas).
+
+**Estructura del JSON `settings`:**
+
+```jsonc
+{
+  "company": { "name", "cif", "address", "phone", "email" },
+  "defaults": { "iva_percentage", "margin_percentage", "budget_validity_days" },
+  "custom_units": [{ "id", "label" }]
+}
+```
+
+> Se crea con la migración inicial con valores por defecto. Ver [task 003](../tasks/003-ajustes-en-db.md) para detalle.
 
 ---
 
