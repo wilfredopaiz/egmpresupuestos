@@ -13,6 +13,7 @@ import Partidas from "./pages/Partidas";
 import SeccionDetalle from "./pages/SeccionDetalle";
 import Presupuesto from "./pages/Presupuesto";
 import ProyectoDetalle from "./pages/ProyectoDetalle";
+import PdfPreview from "./pages/PdfPreview";
 import Ajustes from "./pages/Ajustes";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -89,6 +90,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ProyectoDetalle />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pdf-preview"
+              element={
+                <ProtectedRoute>
+                  <PdfPreview />
                 </ProtectedRoute>
               }
             />

@@ -68,6 +68,12 @@ export function PresupuestoPDF({
   const clientPhone = project.client?.phone ?? null;
 
   const items = project.items ?? [];
+  const itemsBySection = items.reduce((acc: Record<string, any[]>, item: any) => {
+    const sectionName = item.template?.section?.name ?? "Sin seccion";
+    if (!acc[sectionName]) acc[sectionName] = [];
+    acc[sectionName].push(item);
+    return acc;
+  }, {});
 
   return (
     <Document>
@@ -101,7 +107,6 @@ export function PresupuestoPDF({
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.h2}>Detalle</Text>
           <View style={styles.tableHeader}>
             <Text style={styles.c1}>Partida</Text>
             <Text style={styles.c2}>Cant.</Text>
@@ -109,21 +114,28 @@ export function PresupuestoPDF({
             <Text style={styles.c4}>Total</Text>
           </View>
 
-          {items.map((item: any) => {
-            const baseUnitPrice =
-              (item.include_installation ? item.price_installation : 0) +
-              (item.include_supply ? item.price_supply ?? 0 : 0);
-            const unitPrice = baseUnitPrice * (1 + marginPercentage / 100);
-            const lineTotal = unitPrice * item.quantity;
-            return (
-              <View key={item.id} style={styles.tableRow}>
-                <Text style={styles.c1}>{item.template?.name} ({item.template?.unit})</Text>
-                <Text style={styles.c2}>{Number(item.quantity).toFixed(2)}</Text>
-                <Text style={styles.c3}>{formatCurrency(unitPrice)}</Text>
-                <Text style={styles.c4}>{formatCurrency(lineTotal)}</Text>
+          {Object.entries(itemsBySection).map(([sectionName, sectionItems]) => (
+            <View key={sectionName}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionHeaderText}>{sectionName}</Text>
               </View>
-            );
-          })}
+              {(sectionItems as any[]).map((item) => {
+                const baseUnitPrice =
+                  (item.include_installation ? item.price_installation : 0) +
+                  (item.include_supply ? item.price_supply ?? 0 : 0);
+                const unitPrice = baseUnitPrice * (1 + marginPercentage / 100);
+                const lineTotal = unitPrice * item.quantity;
+                return (
+                  <View key={item.id} style={styles.tableRow}>
+                    <Text style={styles.c1}>{item.template?.name} ({item.template?.unit})</Text>
+                    <Text style={styles.c2}>{Number(item.quantity).toFixed(2)}</Text>
+                    <Text style={styles.c3}>{formatCurrency(unitPrice)}</Text>
+                    <Text style={styles.c4}>{formatCurrency(lineTotal)}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          ))}
         </View>
 
         <View style={styles.summaryBox}>

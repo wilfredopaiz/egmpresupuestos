@@ -79,6 +79,17 @@ export const pdfStyles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 8,
   },
+  sectionHeaderRow: {
+    backgroundColor: "#FFF4E6",
+    borderBottomWidth: 1,
+    borderBottomColor: "#FFF4E6",
+    paddingTop: 3,
+    paddingHorizontal: 8,
+    marginTop: 0,
+  },
+  sectionHeaderText: {
+    fontWeight: 700
+  },
   c1: { width: "45%" },
   c2: { width: "12%", textAlign: "right" },
   c3: { width: "18%", textAlign: "right" },
