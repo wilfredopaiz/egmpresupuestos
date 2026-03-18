@@ -244,7 +244,7 @@ export default function NuevaObra() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-client-phone">Telefono</Label>
+              <Label htmlFor="new-client-phone">Teléfono</Label>
               <Input
                 id="new-client-phone"
                 type="tel"

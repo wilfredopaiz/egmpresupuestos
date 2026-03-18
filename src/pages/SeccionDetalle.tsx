@@ -60,6 +60,20 @@ export default function SeccionDetalle() {
   const section = sections.find((s: any) => s.id === sectionId);
   const availableUnits = MEASURE_UNITS.map((unit) => ({ id: unit.id, label: unit.label }));
 
+  const resolveUnitId = (unitValue: string | null | undefined) => {
+    if (!unitValue) return "ud";
+
+    const normalizedValue = unitValue.trim().toLowerCase();
+    const matchedUnit = availableUnits.find(
+      (unit) =>
+        unit.id.toLowerCase() === normalizedValue ||
+        unit.label.toLowerCase() === normalizedValue ||
+        unit.label.toLowerCase().includes(`(${normalizedValue})`),
+    );
+
+    return matchedUnit?.id ?? "ud";
+  };
+
   const handleAddItem = () => {
     if (!sectionId) return;
 
@@ -198,7 +212,7 @@ export default function SeccionDetalle() {
   const openEditModal = (template: any) => {
     setSelectedItem(template);
     setEditItemName(template.name);
-    setEditItemUnit(template.unit);
+    setEditItemUnit(resolveUnitId(template.unit));
     setEditItemPriceInstall(String(template.price_installation));
     setEditItemPriceSupply(template.price_supply !== null ? String(template.price_supply) : "");
     setEditItemOpen(true);
@@ -412,9 +426,9 @@ export default function SeccionDetalle() {
             </div>
             <div className="space-y-2">
               <Label>Unidad</Label>
-              <Select value={editItemUnit} onValueChange={setEditItemUnit}>
+              <Select key={selectedItem?.id ?? "edit-item-unit"} value={editItemUnit || "ud"} onValueChange={setEditItemUnit}>
                 <SelectTrigger className="h-12">
-                  <SelectValue />
+                  <SelectValue placeholder="Selecciona una unidad" />
                 </SelectTrigger>
                 <SelectContent className="bg-background">
                   {availableUnits.map((unit) => (

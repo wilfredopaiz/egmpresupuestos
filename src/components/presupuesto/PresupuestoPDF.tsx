@@ -69,7 +69,7 @@ export function PresupuestoPDF({
 
   const items = project.items ?? [];
   const itemsBySection = items.reduce((acc: Record<string, any[]>, item: any) => {
-    const sectionName = item.template?.section?.name ?? "Sin seccion";
+    const sectionName = item.template?.section?.name ?? "Sin sección";
     if (!acc[sectionName]) acc[sectionName] = [];
     acc[sectionName].push(item);
     return acc;
@@ -82,7 +82,7 @@ export function PresupuestoPDF({
           <View style={[styles.col, { flex: 1 }]}> 
             <Text style={styles.companyName}>{company.name || "Empresa"}</Text>
             <Text style={styles.muted}>CIF: {company.cif || "-"}</Text>
-            <Text style={styles.muted}>{company.address || "Direccion no configurada"}</Text>
+            <Text style={styles.muted}>{company.address || "Dirección no configurada"}</Text>
             <Text style={styles.muted}>Tel: {company.phone || "-"}</Text>
             <Text style={styles.muted}>Email: {company.email || "-"}</Text>
           </View>
@@ -93,15 +93,15 @@ export function PresupuestoPDF({
           <View style={styles.infoGrid}>
             <View style={styles.infoCol}>
               <Text style={styles.h1}>Presupuesto</Text>
-              <Text style={styles.budgetNumber}>Nro: {budgetNumber}</Text>
-              <Text>Fecha emision: {formatDate(issueDate)}</Text>
-              <Text style={styles.muted}>Validez: {validityDays} dias</Text>
+              <Text style={styles.budgetNumber}>N.º: {budgetNumber}</Text>
+              <Text>Fecha emisión: {formatDate(issueDate)}</Text>
+              <Text style={styles.muted}>Validez: {validityDays} días</Text>
             </View>
             <View style={styles.infoCol}>
               <Text style={styles.h2}>Cliente</Text>
               <Text>{clientName}</Text>
               {clientEmail ? <Text style={styles.muted}>Email: {clientEmail}</Text> : null}
-              {clientPhone ? <Text style={styles.muted}>Telefono: {clientPhone}</Text> : null}
+              {clientPhone ? <Text style={styles.muted}>Teléfono: {clientPhone}</Text> : null}
             </View>
           </View>
         </View>
@@ -156,7 +156,7 @@ export function PresupuestoPDF({
         </View>
 
         <View style={styles.footer}>
-          <Text>Este presupuesto tiene una validez de {validityDays} dias desde la fecha de emision.</Text>
+          <Text>Este presupuesto tiene una validez de {validityDays} días desde la fecha de emisión.</Text>
           <Text>
             {company.name || "Empresa"} | {company.phone || "-"} | {company.email || "-"}
           </Text>

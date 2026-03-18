@@ -22,7 +22,7 @@ export function ClientCard({ client, projectCount, onViewProjects, onEdit }: Cli
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Phone className="h-4 w-4" />
-            <span className="truncate">{client.phone || "Sin telefono"}</span>
+            <span className="truncate">{client.phone || "Sin teléfono"}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Mail className="h-4 w-4" />
