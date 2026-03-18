@@ -105,7 +105,7 @@ export function AppSidebar() {
           onClick={() => void signOut()}
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>Cerrar sesion</span>}
+          {!collapsed && <span>Cerrar sesión</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>

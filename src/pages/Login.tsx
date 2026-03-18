@@ -29,7 +29,7 @@ export default function Login() {
       await signIn(email, password);
       navigate("/");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo completar la autenticacion";
+      const message = error instanceof Error ? error.message : "No se pudo completar la autenticación";
       toast({
         title: "Error",
         description: message,
@@ -45,7 +45,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">EGM Presupuestos</CardTitle>
-          <CardDescription>Inicia sesion en tu cuenta</CardDescription>
+          <CardDescription>Inicia sesión en tu cuenta</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -61,7 +61,7 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contrasena</Label>
+              <Label htmlFor="password">Contraseña</Label>
               <Input
                 id="password"
                 type="password"
@@ -73,7 +73,7 @@ export default function Login() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Cargando..." : "Iniciar sesion"}
+              {loading ? "Cargando..." : "Iniciar sesión"}
             </Button>
           </form>
         </CardContent>
